@@ -13,9 +13,9 @@ function HomePage() {
             <Navbar />
             <Hero />
             <Awards /> 
+            <Stats />
             <Education />
             <Pricing />
-            <Stats />
             <OpenAccount />
             <Footer />
         </div>
