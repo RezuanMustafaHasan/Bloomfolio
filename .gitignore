@@ -1,0 +1,43 @@
+# macOS
+.DS_Store
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+.cache/
+.next/
+out/
+.vite/
+.parcel-cache/
+coverage/
+
+# Logs
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.*
+frontend/.env
+frontend/.env.*
+backend/.env
+backend/.env.*
+
+# Python (in case backend uses it)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.pytype/
+venv/
+
+# IDE/editor
+.vscode/
+.idea/
