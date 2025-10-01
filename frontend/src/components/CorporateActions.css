@@ -1,0 +1,104 @@
+.corporate-actions {
+  margin: 2rem 0;
+}
+
+.actions-card {
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.actions-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e6e6e6;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actions-card .card-header h5 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.action-section {
+  height: 100%;
+}
+
+.action-section h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #00c805;
+}
+
+.action-table {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.action-table thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e6e6e6;
+  font-weight: 600;
+  color: #333;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.action-table tbody td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.85rem;
+}
+
+.action-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.dividend-value {
+  color: #00c805;
+  font-weight: 600;
+}
+
+.bonus-value {
+  color: #007bff;
+  font-weight: 600;
+}
+
+.rights-value {
+  color: #6f42c1;
+  font-weight: 600;
+}
+
+@media (max-width: 992px) {
+  .actions-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .actions-card .card-header small {
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-table {
+    font-size: 0.8rem;
+  }
+  
+  .action-table thead th,
+  .action-table tbody td {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+  
+  .action-section h6 {
+    font-size: 0.9rem;
+  }
+}
