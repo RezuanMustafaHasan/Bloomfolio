@@ -1,0 +1,82 @@
+.stock-header {
+  padding: 2rem 0 1rem 0;
+  margin-top: 70px; /* Account for fixed navbar */
+}
+
+.stock-title {
+  margin-bottom: 1rem;
+}
+
+.company-name {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #000000;
+  margin: 0;
+  display: inline-block;
+  margin-right: 1rem;
+}
+
+.trading-code {
+  font-size: 1.2rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.stock-price-info {
+  margin-bottom: 0.5rem;
+}
+
+.current-price {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #000000;
+  margin-right: 1rem;
+}
+
+.price-change {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.price-change.positive {
+  color: #00c805;
+}
+
+.price-change.negative {
+  color: #ff5733;
+}
+
+.market-status {
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: #00c805;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.status-text {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .company-name {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  
+  .current-price {
+    font-size: 2rem;
+  }
+  
+  .price-change {
+    font-size: 1rem;
+  }
+}

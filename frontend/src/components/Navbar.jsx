@@ -1,9 +1,70 @@
+import React, { useState } from 'react';
+import './Navbar.css';
 
+const TopNavbar = () => {
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
-export default function Navbar() {
+  const toggleNav = () => {
+    setIsNavOpen(!isNavOpen);
+  };
+
   return (
-    <div>
-      <h1>Navbar</h1>
-    </div>
-  )
-}
+    <nav className="navbar navbar-expand-lg navbar-light bg-white custom-navbar shadow-sm fixed-top">
+      <div className="container-fluid">
+        <a className="navbar-brand brand-logo" href="#">
+          <span className="brand-text">Robinhood</span>
+        </a>
+        
+        <button 
+          className="navbar-toggler" 
+          type="button" 
+          onClick={toggleNav}
+          aria-controls="navbarNav" 
+          aria-expanded={isNavOpen} 
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        
+        <div className={`collapse navbar-collapse ${isNavOpen ? 'show' : ''}`} id="navbarNav">
+          <ul className="navbar-nav me-auto">
+            <li className="nav-item">
+              <a className="nav-link nav-item" href="#">Investing</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link nav-item" href="#">Retirement</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link nav-item" href="#">Spending</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link nav-item" href="#">Snacks</a>
+            </li>
+          </ul>
+          
+          <form className="d-flex me-3">
+            <input
+              className="form-control search-input"
+              type="search"
+              placeholder="Search"
+              aria-label="Search"
+            />
+          </form>
+          
+          <ul className="navbar-nav">
+            <li className="nav-item">
+              <a className="nav-link nav-item" href="#">Account</a>
+            </li>
+            <li className="nav-item">
+              <button className="btn btn-success login-btn">
+                Log In
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default TopNavbar;
