@@ -8,6 +8,7 @@ import FinancialPerformance from './components/FinancialPerformance';
 import './App.css';
 import stockData from './assets/stockData'
 
+
 function App() {
   return (
     <div className="App">

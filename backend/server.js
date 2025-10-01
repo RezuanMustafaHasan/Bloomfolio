@@ -17,7 +17,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Basic route
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to Bloomfolio API' });
+  res.send('Welcome to Bloomfolio API');
+  // res.json({ message: 'Welcome to Bloomfolio API' });
 });
 
 // Health check route
@@ -25,8 +26,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+
+
+
 // API routes
 app.use('/api', routes);
+
+
 
 // Error handling middleware
 app.use(errorHandler);
@@ -49,6 +55,38 @@ connectDB();
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+app.get('/fetch-details/tradingCode=:tradingCode', async (req, res) => {
+  try {
+    const { tradingCode } = req.params;
+    
+    // Import Stock model
+    const Stock = require('./models/Stock');
+    
+    // Find stock by trading code
+    const stock = await Stock.findOne({ tradingCode: tradingCode });
+    
+    if (!stock) {
+      return res.status(404).json({
+        success: false,
+        message: `Stock with trading code '${tradingCode}' not found`
+      });
+    }
+    
+    // Send stock details as response
+    res.json({
+      success: true,
+      data: stock
+    });
+    
+  } catch (error) {
+    console.error('Error fetching stock details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error while fetching stock details'
+    });
+  }
 });
 
 module.exports = app;
