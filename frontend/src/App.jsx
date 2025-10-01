@@ -8,16 +8,15 @@ import FinancialPerformance from './components/FinancialPerformance';
 import './App.css';
 import stockData from './assets/stockData'
 
-
 function App() {
   return (
     <div className="App">
         <div className="container main-content">
-          <StockHeader stockData={stockData} />
+          <StockHeader stockData={stockData}/>
           <StockChart />
-          <StockInfoCards stockData={stockData} />
-          <CorporateActions stockData={stockData} />
-          <FinancialPerformance stockData={stockData} />
+          <StockInfoCards stockData={stockData}/>
+          <CorporateActions stockData={stockData}/>
+          <FinancialPerformance stockData={stockData}/>
         </div>
       </div>
   );
