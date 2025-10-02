@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Navbar.css';
+import { Link } from 'react-router-dom';
 
 const TopNavbar = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -29,17 +30,9 @@ const TopNavbar = () => {
         <div className={`collapse navbar-collapse ${isNavOpen ? 'show' : ''}`} id="navbarNav">
           <ul className="navbar-nav me-auto">
             <li className="nav-item">
-              <a className="nav-link nav-item" href="#">Investing</a>
+              <Link className="nav-link nav-item" to="/Dashboard">Dashboard</Link>
             </li>
-            <li className="nav-item">
-              <a className="nav-link nav-item" href="#">Retirement</a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link nav-item" href="#">Spending</a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link nav-item" href="#">Snacks</a>
-            </li>
+            
           </ul>
           
           <form className="d-flex me-3">

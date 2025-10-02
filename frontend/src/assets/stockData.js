@@ -1,4 +1,4 @@
-const stockData = {
+const sd = {
   companyName: 'Social Islami Bank PLC',
   tradingCode: 'SIBL',
   scripCode: 'N/A',
@@ -148,4 +148,5 @@ const stockData = {
   }
 };
 
-export default stockData
+
+export default sd

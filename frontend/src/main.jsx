@@ -12,7 +12,8 @@ createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <TopNavbar />
       <Routes>
-        <Route path="/" element={<App />} />
+        
+        <Route path="/stocks/:tradingCode" element={<App />} />
       </Routes> 
   </BrowserRouter>
 )

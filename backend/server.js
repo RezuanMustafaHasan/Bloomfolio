@@ -57,7 +57,7 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-app.get('/fetch-details/tradingCode=:tradingCode', async (req, res) => {
+app.get('/fetch-details/:tradingCode', async (req, res) => {
   try {
     const { tradingCode } = req.params;
     
