@@ -89,4 +89,36 @@ app.get('/fetch-details/:tradingCode', async (req, res) => {
   }
 });
 
+// Fetch all stocks endpoint
+app.get('/fetch-all-stocks', async (req, res) => {
+  try {
+    // Import Stock model
+    const Stock = require('./models/Stock');
+    
+    // Find all stocks
+    const stocks = await Stock.find({});
+    
+    if (!stocks || stocks.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No stocks found in the database'
+      });
+    }
+    
+    // Send all stocks as response
+    res.json({
+      success: true,
+      data: stocks,
+      count: stocks.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching all stocks:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error while fetching all stocks'
+    });
+  }
+});
+
 module.exports = app;

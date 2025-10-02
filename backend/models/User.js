@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  orderList: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order'
+  }],
   portfolio: [{
     stock: {
       type: String,
@@ -28,16 +32,22 @@ const userSchema = new mongoose.Schema({
       required: true,
       min: 0
     },
-    purchasePrice: {
+    buyPrice: {
       type: Number,
       required: true,
       min: 0
     },
-    purchaseDate: {
+    date: {
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+  purchasePower: {
+    type: Number,
+    required: true,
+    default: 0,
+    min: 0
+  }
 }, {
   timestamps: true
 });
