@@ -292,6 +292,10 @@ const stockSchema = new mongoose.Schema({
       required: false
     }
   },
+  orders: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order'
+  }],
   lastUpdated: {
     type: Date,
     default: Date.now

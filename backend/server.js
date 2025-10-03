@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const cookieParser = require("cookie-parser");
+const authRoute = require("./routes/AuthRoute");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,6 +14,7 @@ const errorHandler = require('./middleware/errorHandler');
 
 // Middleware
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -120,5 +123,6 @@ app.get('/fetch-all-stocks', async (req, res) => {
     });
   }
 });
+app.use("/", authRoute);
 
 module.exports = app;
