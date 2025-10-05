@@ -52,6 +52,42 @@
   margin-top: 0.5rem;
 }
 
+.bs-btn {
+  display: flex;
+  justify-content: flex-end;
+  
+}
+
+.b-btn, .s-btn {
+  margin-right: 0.5rem;
+  height: 2.7rem;
+  width: 7rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  border-radius: 1.8rem;
+  border: none;
+}
+
+.b-btn:hover {
+  background-color: #00a004;
+}
+
+.s-btn:hover {
+  background-color: #e64a19;
+}
+
+.b-btn {
+  margin-left: 0.5rem;
+  background-color: #10b716;
+  color: #ffffff;
+}
+
+.s-btn {
+  margin-left: 0.5rem;
+  background-color: #ff5733;
+  color: #ffffff;
+}
+
 .status-indicator {
   width: 8px;
   height: 8px;
@@ -64,6 +100,8 @@
   color: #6c757d;
   font-size: 0.9rem;
 }
+
+
 
 @media (max-width: 768px) {
   .company-name {
