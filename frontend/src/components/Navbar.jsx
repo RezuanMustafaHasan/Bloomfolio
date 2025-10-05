@@ -60,11 +60,16 @@ const TopNavbar = () => {
                 </li>
               </>
             ) : (
+              <>
+              <li className="nav-item">
+                <Link className="nav-link nav-item" to="/Profile">Profile</Link>
+              </li>
               <li className="nav-item">
                 <button className="btn btn-success login-btn" onClick={logout}>
                   Log Out
                 </button>
               </li>
+              </>
             )}
           </ul>
         </div>

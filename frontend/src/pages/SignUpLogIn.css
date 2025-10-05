@@ -1,3 +1,8 @@
-.signup-login{
-    margin-left: 30rem;
+.signup-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Ensure full viewport height minus fixed navbar */
+  min-height: calc(100vh - var(--navbar-height));
+  padding: 1rem;
 }

@@ -1,0 +1,75 @@
+/* profile Container */
+.profile {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.profile h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.profile p {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0 0 32px 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile {
+    padding: 16px;
+  }
+  
+  .profile h1 {
+    font-size: 28px;
+  }
+  
+  .profile p {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile {
+    padding: 12px;
+  }
+  
+  .profile h1 {
+    font-size: 24px;
+  }
+}
+
+.add-fund-container {
+  text-align: right;
+}
+
+.add-fund-btn {
+  padding: 0.6rem 1.6rem;
+  background: #c80000;
+  border: none;
+  border-radius: 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-fund-btn:hover {
+  background: #a80000;
+}
+
+
+
+.stock-table-container {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 20px 0;
+  overflow: hidden;
+}
+
