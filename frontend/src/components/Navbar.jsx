@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import './Navbar.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const TopNavbar = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
 
   const toggleNav = () => {
     setIsNavOpen(!isNavOpen);
@@ -45,14 +48,24 @@ const TopNavbar = () => {
           </form>
           
           <ul className="navbar-nav">
-            <li className="nav-item">
-              <a className="nav-link nav-item" href="#">Account</a>
-            </li>
-            <li className="nav-item">
-              <button className="btn btn-success login-btn">
-                Log In
-              </button>
-            </li>
+            {!isAuthenticated ? (
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link nav-item" to="/signup">Sign Up</Link>
+                </li>
+                <li className="nav-item">
+                  <button className="btn btn-success login-btn" onClick={() => navigate('/login')}>
+                    Log In
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li className="nav-item">
+                <button className="btn btn-success login-btn" onClick={logout}>
+                  Log Out
+                </button>
+              </li>
+            )}
           </ul>
         </div>
       </div>

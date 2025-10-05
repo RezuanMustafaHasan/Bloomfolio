@@ -13,7 +13,10 @@ const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 
 // Middleware
-app.use(cors());
+const FRONTEND_ORIGIN = 'http://localhost:5173';
+app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }));
+// Handle preflight requests (Express 5 requires named wildcard)
+app.options('/*any', cors({ origin: FRONTEND_ORIGIN, credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
