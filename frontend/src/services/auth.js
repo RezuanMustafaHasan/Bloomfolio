@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_BACKEND_BASE || 'http://localhost:8080';
 
 export const signup = async ({ name, email, password }) => {
   const res = await axios.post(`${API_BASE}/signup`, {

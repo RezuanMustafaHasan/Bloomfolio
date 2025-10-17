@@ -7,6 +7,7 @@ import AdminNavbar from './ui/AdminNavbar.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import AdminLogin from './pages/AdminLogin.jsx';
 import UsersPage from './pages/UsersPage.jsx';
+import AdminRequests from './pages/AdminRequests.jsx';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext.jsx';
 
 const RequireAdmin = ({ children }) => {
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
           <Route path="/admin/users" element={<RequireAdmin><UsersPage /></RequireAdmin>} />
+          <Route path="/admin/requests" element={<RequireAdmin><AdminRequests /></RequireAdmin>} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </BrowserRouter>

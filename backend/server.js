@@ -13,10 +13,26 @@ const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 
 // Middleware
-const FRONTEND_ORIGIN = 'http://localhost:5173';
-app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }));
+// Allow multiple Vite dev origins with credentials
+const allowedOrigins = [
+  process.env.FRONTEND_ORIGIN,
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+].filter(Boolean);
+
+const corsOptions = {
+  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow non-browser clients
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+};
+
+app.use(cors(corsOptions));
 // Handle preflight requests (Express 5 requires named wildcard)
-app.options('/*any', cors({ origin: FRONTEND_ORIGIN, credentials: true }));
+app.options('/*any', cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

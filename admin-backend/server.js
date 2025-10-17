@@ -11,9 +11,25 @@ const app = express();
 const PORT = process.env.ADMIN_PORT || 8081;
 
 // Middleware
-const FRONTEND_ORIGIN = process.env.ADMIN_FRONTEND_ORIGIN || 'http://localhost:5174';
-app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }));
-app.options('/*any', cors({ origin: FRONTEND_ORIGIN, credentials: true }));
+// Allow multiple admin frontend dev origins with credentials
+const adminAllowedOrigins = [
+  process.env.ADMIN_FRONTEND_ORIGIN,
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+].filter(Boolean);
+
+const adminCorsOptions = {
+  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (adminAllowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+};
+
+app.use(cors(adminCorsOptions));
+app.options('/*any', cors(adminCorsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -31,6 +47,7 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use('/admin/auth', authRoute);
 app.use('/admin', usersRoute);
+app.use('/admin', require('./routes/AdminRequestsRoute'));
 
 // MongoDB connection
 const connectDB = async () => {
