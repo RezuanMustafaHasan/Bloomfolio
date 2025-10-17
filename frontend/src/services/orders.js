@@ -16,3 +16,11 @@ export const placeOrder = async ({ tradingCode, orderType, askingPrice, quantity
   }, { withCredentials: true });
   return res.data;
 };
+
+export const executeOrder = async (orderId) => {
+  const res = await axios.post(`${API_BASE}/order/execute/${orderId}`,
+    {},
+    { withCredentials: true }
+  );
+  return res.data;
+};

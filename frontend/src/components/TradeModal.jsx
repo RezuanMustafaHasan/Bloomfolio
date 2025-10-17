@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './TradeModal.css';
 import { useAuth } from '../context/AuthContext.jsx';
-import { listOrders, placeOrder } from '../services/orders.js';
+import { listOrders, placeOrder, executeOrder } from '../services/orders.js';
 import axios from 'axios';
 
 const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }) => {
@@ -17,6 +17,8 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
   const [placeSuccess, setPlaceSuccess] = useState('');
 
   const [purchasePower, setPurchasePower] = useState(null);
+  const [availableShares, setAvailableShares] = useState(null);
+  
   const [userEmail, setUserEmail] = useState(null);
 
   const isBuy = String(mode).toUpperCase() === 'BUY';
@@ -52,6 +54,17 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
         setUserEmail(null);
       }
     })();
+    // Fetch available shares
+    (async () => {
+      try {
+        if (!isAuthenticated || !userId) return;
+        const res = await axios.get(`http://localhost:8080/users/${userId}/portfolio/${tradingCode}`, { withCredentials: true });
+        const qty = Number(res?.data?.data?.quantity);
+        setAvailableShares(Number.isFinite(qty) ? qty : 0);
+      } catch (_) {
+        setAvailableShares(null);
+      }
+    })();
   }, [isOpen, tradingCode, currentPrice, isAuthenticated, userId]);
 
   const buyOrders = useMemo(() => orders.filter(o => o.orderType === 'BUY'), [orders]);
@@ -82,10 +95,34 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
     try {
       const res = await placeOrder({ tradingCode, orderType: isBuy ? 'BUY' : 'SELL', askingPrice: price, quantity: qty, userEmail });
       if (res?.success) {
+        const orderId = res?.data?._id;
+        try {
+          if (orderId) {
+            const exec = await executeOrder(orderId);
+            if (!exec?.success) {
+              // If execution fails, still show order placed but warn
+              setPlaceError(exec?.message || 'Trade execution failed');
+            }
+          }
+        } catch (_) {
+          // Ignore execution error but surface message
+          setPlaceError('Trade execution failed');
+        }
         setPlaceSuccess('Order placed successfully');
-        // refresh orders list
-        const list = await listOrders({ tradingCode });
-        setOrders(list?.data || []);
+        // refresh orders list and user info after execution
+        try {
+          const list = await listOrders({ tradingCode });
+          setOrders(list?.data || []);
+        } catch (_) {}
+        try {
+          if (isAuthenticated && userId) {
+            const userRes = await axios.get(`http://localhost:8080/users/${userId}`, { withCredentials: true });
+            setPurchasePower(userRes?.data?.purchasePower ?? null);
+            const portRes = await axios.get(`http://localhost:8080/users/${userId}/portfolio/${tradingCode}`, { withCredentials: true });
+            const qtyAfter = Number(portRes?.data?.data?.quantity);
+            setAvailableShares(Number.isFinite(qtyAfter) ? qtyAfter : 0);
+          }
+        } catch (_) {}
         setQuantity('');
         setAskingPrice(currentPrice ?? '');
       } else {
@@ -170,7 +207,11 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
               <form className="trade-form" onSubmit={onSubmit}>
                 <div className="form-header">
                   <h5>Trading Form</h5>
-                  <div className="power">Purchase Power: {purchasePower == null ? '—' : `$${purchasePower}`}</div>
+                  {isBuy ? (
+                    <div className="power">Purchase Power: {purchasePower == null ? '—' : `$${purchasePower}`}</div>
+                  ) : (
+                    <div className="power">Available Shares: {availableShares == null ? '—' : `${availableShares}`}</div>
+                  )}
                 </div>
 
                 <div className="form-row">

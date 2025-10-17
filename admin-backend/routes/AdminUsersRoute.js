@@ -59,7 +59,7 @@ router.post('/assign-stock', requireAdmin, async (req, res) => {
     if (existing) {
       existing.quantity += quantity;
     } else {
-      user.portfolio.push({ stock: tradingCode, quantity, buyPrice: 0, date: new Date() });
+      user.portfolio.push({ stock: tradingCode, quantity, buyPrice: 10, date: new Date() });
     }
     await user.save();
     res.json({ success: true, message: 'Stock assigned successfully', data: { email, tradingCode, quantity } });

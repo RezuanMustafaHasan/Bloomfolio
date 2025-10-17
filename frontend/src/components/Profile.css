@@ -63,13 +63,87 @@
   background: #a80000;
 }
 
-
-
 .stock-table-container {
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin: 20px 0;
   overflow: hidden;
+  padding: 16px;
+}
+
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.summary-item .label {
+  color: #6b7280;
+  margin-right: 8px;
+}
+
+.summary-item .value {
+  font-weight: 600;
+}
+
+.summary-item .value.positive {
+  color: #0f766e; /* teal */
+}
+
+.summary-item .value.negative {
+  color: #b91c1c; /* red */
+}
+
+.table.performance-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table.performance-table thead th {
+  background: #f9fafb;
+  font-weight: 600;
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table.performance-table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.table.performance-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.positive {
+  color: #0f766e;
+}
+
+.negative {
+  color: #b91c1c;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 

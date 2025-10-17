@@ -6,15 +6,11 @@ const User = require('../models/User');
 
 // POST /api/order/execute/:orderId
 router.post('/execute/:orderId', requireUser, async (req, res) => {
-  const session = await mongoose.startSession();
   try {
-    session.startTransaction();
-
     const { orderId } = req.params;
     // 1) Validate and fetch original order
-    const original = await Order.findById(orderId).session(session);
+    const original = await Order.findById(orderId);
     if (!original) {
-      await session.abortTransaction();
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
@@ -28,14 +24,14 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
     const getPortfolioEntry = (userDoc) => userDoc.portfolio.find(p => p.stock === code);
 
     const ensureSellerCapacity = async (userId) => {
-      const seller = await User.findById(userId).session(session);
+      const seller = await User.findById(userId);
       if (!seller) return 0;
       const p = getPortfolioEntry(seller);
       return Math.max(0, p?.quantity || 0);
     };
 
     const updateBuyerAfterTrade = async (buyerId, qty) => {
-      const buyer = await User.findById(buyerId).session(session);
+      const buyer = await User.findById(buyerId);
       if (!buyer) throw new Error('Buyer not found');
       const cost = qty * price;
       if (buyer.purchasePower < cost) throw new Error('Buyer cannot afford');
@@ -50,11 +46,11 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
         p.quantity = newQty;
         p.date = new Date();
       }
-      await buyer.save({ session });
+      await buyer.save();
     };
 
     const updateSellerAfterTrade = async (sellerId, qty) => {
-      const seller = await User.findById(sellerId).session(session);
+      const seller = await User.findById(sellerId);
       if (!seller) throw new Error('Seller not found');
       const revenue = qty * price;
       seller.purchasePower += revenue;
@@ -68,7 +64,7 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
       if (p && p.quantity === 0) {
         seller.portfolio = seller.portfolio.filter(e => e.stock !== code);
       }
-      await seller.save({ session });
+      await seller.save();
     };
 
     // Recursively fetch and process opposite orders FIFO until filled or none
@@ -78,7 +74,7 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
         tradingCode: code,
         orderType: oppositeType,
         askingPrice: price,
-      }).sort({ createdAt: 1, serial: 1 }).session(session);
+      }).sort({ createdAt: 1, serial: 1 });
 
       if (!matches.length) break;
 
@@ -91,7 +87,7 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
 
         if (originalType === 'BUY') {
           // Initiator is buyer; counterparty is seller
-          const buyer = await User.findById(original.userId).session(session);
+          const buyer = await User.findById(original.userId);
           if (!buyer) throw new Error('Buyer not found');
           const maxAffordable = Math.floor(buyer.purchasePower / price);
           execQty = Math.min(execQty, maxAffordable);
@@ -104,7 +100,7 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
             // Buyer cannot afford or seller cannot sell; delete buyer's unfilled if no affordability
             if (maxAffordable <= 0) {
               remainingQty = 0;
-              await Order.deleteOne({ _id: original._id }).session(session);
+              await Order.deleteOne({ _id: original._id });
               processed.push({ matchId: match._id, qty: 0 });
               break;
             }
@@ -115,8 +111,41 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
           await updateBuyerAfterTrade(buyer._id, execQty);
           await updateSellerAfterTrade(match.userId, execQty);
           // Record transaction references
-          await User.updateOne({ _id: buyer._id }, { $addToSet: { orderList: original._id } }, { session });
-          await User.updateOne({ _id: match.userId }, { $addToSet: { orderList: match._id } }, { session });
+          await User.updateOne({ _id: buyer._id }, { $addToSet: { orderList: original._id } });
+          await User.updateOne({ _id: match.userId }, { $addToSet: { orderList: match._id } });
+          // Append transaction history for both participants
+          await User.updateOne(
+            { _id: buyer._id },
+            {
+              $push: {
+                transactionHistory: {
+                  action: 'BUY',
+                  tradingCode: code,
+                  price,
+                  quantity: execQty,
+                  orderId: original._id,
+                  matchedOrderId: match._id,
+                  timestamp: new Date(),
+                }
+              }
+            }
+          );
+          await User.updateOne(
+            { _id: match.userId },
+            {
+              $push: {
+                transactionHistory: {
+                  action: 'SELL',
+                  tradingCode: code,
+                  price,
+                  quantity: execQty,
+                  orderId: match._id,
+                  matchedOrderId: original._id,
+                  timestamp: new Date(),
+                }
+              }
+            }
+          );
 
         } else {
           // Initiator is seller; counterparty is buyer
@@ -124,12 +153,12 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
           remainingQty = Math.min(remainingQty, sellerAvail);
           if (remainingQty <= 0) {
             // Seller has no holdings; delete unfilled portion
-            await Order.deleteOne({ _id: original._id }).session(session);
+            await Order.deleteOne({ _id: original._id });
             processed.push({ matchId: match._id, qty: 0 });
             break;
           }
 
-          const buyer = await User.findById(match.userId).session(session);
+          const buyer = await User.findById(match.userId);
           if (!buyer) {
             // Counterparty not found; skip
             continue;
@@ -145,17 +174,50 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
           await updateBuyerAfterTrade(buyer._id, execQty);
           await updateSellerAfterTrade(original.userId, execQty);
           // Record transaction references
-          await User.updateOne({ _id: buyer._id }, { $addToSet: { orderList: match._id } }, { session });
-          await User.updateOne({ _id: original.userId }, { $addToSet: { orderList: original._id } }, { session });
+          await User.updateOne({ _id: buyer._id }, { $addToSet: { orderList: match._id } });
+          await User.updateOne({ _id: original.userId }, { $addToSet: { orderList: original._id } });
+          // Append transaction history for both participants
+          await User.updateOne(
+            { _id: buyer._id },
+            {
+              $push: {
+                transactionHistory: {
+                  action: 'BUY',
+                  tradingCode: code,
+                  price,
+                  quantity: execQty,
+                  orderId: match._id,
+                  matchedOrderId: original._id,
+                  timestamp: new Date(),
+                }
+              }
+            }
+          );
+          await User.updateOne(
+            { _id: original.userId },
+            {
+              $push: {
+                transactionHistory: {
+                  action: 'SELL',
+                  tradingCode: code,
+                  price,
+                  quantity: execQty,
+                  orderId: original._id,
+                  matchedOrderId: match._id,
+                  timestamp: new Date(),
+                }
+              }
+            }
+          );
         }
 
         // Update remaining quantities in orders
         remainingQty -= execQty;
         const matchRemaining = Number(match.quantity) - execQty;
         if (matchRemaining <= 0) {
-          await Order.deleteOne({ _id: match._id }).session(session);
+          await Order.deleteOne({ _id: match._id });
         } else {
-          await Order.updateOne({ _id: match._id }, { $set: { quantity: matchRemaining } }).session(session);
+          await Order.updateOne({ _id: match._id }, { $set: { quantity: matchRemaining } });
         }
 
         processed.push({ matchId: match._id, qty: execQty });
@@ -166,19 +228,15 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
 
     // Finalize original order state
     if (remainingQty <= 0) {
-      await Order.deleteOne({ _id: original._id }).session(session);
+      await Order.deleteOne({ _id: original._id });
     } else {
-      await Order.updateOne({ _id: original._id }, { $set: { quantity: remainingQty } }).session(session);
+      await Order.updateOne({ _id: original._id }, { $set: { quantity: remainingQty } });
     }
 
-    await session.commitTransaction();
     return res.json({ success: true, message: 'Execution complete', data: { remainingQty, processed } });
   } catch (err) {
-    await session.abortTransaction();
     console.error('Trade execution error:', err);
     return res.status(500).json({ success: false, message: 'Execution failed', error: err.message });
-  } finally {
-    session.endSession();
   }
 });
 

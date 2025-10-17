@@ -1,12 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Navbar.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 const TopNavbar = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const [user, setUser] = useState({});
+  const { isAuthenticated, logout, userId } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await axios.get(`http://localhost:8080/users/${userId}`, { withCredentials: true });
+        if (!cancelled) setUser(data);
+      } catch (err) {
+        console.error('Failed to fetch user', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, userId]);
 
   const toggleNav = () => {
     setIsNavOpen(!isNavOpen);
@@ -37,7 +53,7 @@ const TopNavbar = () => {
             </li>
             
           </ul>
-          
+{/*           
           <form className="d-flex me-3">
             <input
               className="form-control search-input"
@@ -45,7 +61,7 @@ const TopNavbar = () => {
               placeholder="Search"
               aria-label="Search"
             />
-          </form>
+          </form> */}
           
           <ul className="navbar-nav">
             {!isAuthenticated ? (
@@ -61,8 +77,11 @@ const TopNavbar = () => {
               </>
             ) : (
               <>
+              {/* <li className="nav-item ">
+                <Link className="nav-link nav-item" to="/Profile">Purchase Power: {user?.purchasePower || '0'}</Link>
+              </li> */}
               <li className="nav-item">
-                <Link className="nav-link nav-item" to="/Profile">Profile</Link>
+                <Link className="nav-link nav-item" to="/Profile">{user?.name || 'Profile'}</Link>
               </li>
               <li className="nav-item">
                 <button className="btn btn-success login-btn" onClick={logout}>

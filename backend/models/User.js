@@ -43,6 +43,16 @@ const userSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
+  // --- New: Transaction history for executed trades ---
+  transactionHistory: [{
+    action: { type: String, enum: ['BUY', 'SELL'], required: true },
+    tradingCode: { type: String, required: true },
+    price: { type: Number, required: true, min: 0 },
+    quantity: { type: Number, required: true, min: 1 },
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+    matchedOrderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+    timestamp: { type: Date, default: Date.now }
+  }],
   createdAt: {
     type: Date,
     default: new Date(),
