@@ -143,5 +143,6 @@ app.get('/fetch-all-stocks', async (req, res) => {
   }
 });
 app.use("/", authRoute);
+app.use("/users", require("./routes/UserRoute"));
 
 module.exports = app;

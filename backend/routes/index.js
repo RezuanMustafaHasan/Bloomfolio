@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 router.use('/requests', require('./RequestRoute'));
+router.use('/orders', require('./OrderRoute'));
 
 // Example route
 router.get('/test', (req, res) => {

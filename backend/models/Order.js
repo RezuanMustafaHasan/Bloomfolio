@@ -23,11 +23,10 @@ const orderSchema = new mongoose.Schema({
     required: true,
     min: 1
   },
-  userEmail: {
-    type: String,
-    required: true,
-    lowercase: true,
-    trim: true
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   serial: {
     type: Number,
@@ -50,6 +49,6 @@ const orderSchema = new mongoose.Schema({
 orderSchema.index({ tradingCode: 1, orderType: 1, serial: 1 });
 
 // Index for user orders
-orderSchema.index({ userEmail: 1 });
+orderSchema.index({ userId: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);

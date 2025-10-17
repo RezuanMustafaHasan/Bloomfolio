@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { requireAdmin } = require('../middleware/AdminAuthMiddleware');
 const MoneyRequest = require('../models/MoneyRequest');
+const User = require('../models/User');
 
 router.get('/requests', requireAdmin, async (req, res) => {
   try {
@@ -21,6 +22,9 @@ router.post('/requests/:id/accept', requireAdmin, async (req, res) => {
     const reqDoc = await MoneyRequest.findById(req.params.id);
     if (!reqDoc) return res.status(404).json({ success: false, message: 'Request not found' });
     const before = reqDoc.requestedAmount;
+    const user = await User.findById(reqDoc.userId);
+    user.purchasePower += before;
+    await user.save();
     reqDoc.status = 'Approved';
     reqDoc.approvedAt = new Date();
     reqDoc.history.push({
