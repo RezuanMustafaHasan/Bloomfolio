@@ -3,6 +3,7 @@ const router = express.Router();
 
 router.use('/requests', require('./RequestRoute'));
 router.use('/orders', require('./OrderRoute'));
+router.use('/order', require('./TradeExecution'));
 
 // Example route
 router.get('/test', (req, res) => {

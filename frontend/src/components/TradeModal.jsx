@@ -135,14 +135,8 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
                           {buyOrders.slice(0, 10).map(o => (
                             <li key={o._id} className="order-item">
                               {/* <span className="type-badge buy">BUY</span> */}
-                              <div className="row">
-                                <div className="col-6">
-                                  <span className="price">${o.askingPrice?.toFixed?.(2) ?? o.askingPrice}</span>
-                                </div>
-                                <div className="col-6">
-                                 <span className="qty">× {o.quantity}</span>
-                                </div>
-                              </div>
+                                <span className="price">${o.askingPrice?.toFixed?.(2) ?? o.askingPrice}</span>
+                                <span className="qty">× {o.quantity}</span>
                               {/* <span className={`status ${o.status?.toLowerCase()}`}>{o.status}</span> */}
                             </li>
                           ))}
