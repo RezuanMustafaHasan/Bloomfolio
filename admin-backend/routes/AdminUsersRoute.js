@@ -46,4 +46,27 @@ router.delete('/users/:id', requireAdmin, async (req, res) => {
   }
 });
 
+router.post('/assign-stock', requireAdmin, async (req, res) => {
+  try {
+    const { email, tradingCode, quantity } = req.body;
+    if (!email || !tradingCode || typeof quantity !== 'number' || quantity <= 0) {
+      return res.status(400).json({ success: false, message: 'Provide email, tradingCode, and positive quantity' });
+    }
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const existing = user.portfolio.find(p => p.stock === tradingCode);
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      user.portfolio.push({ stock: tradingCode, quantity, buyPrice: 0, date: new Date() });
+    }
+    await user.save();
+    res.json({ success: true, message: 'Stock assigned successfully', data: { email, tradingCode, quantity } });
+  } catch (error) {
+    console.error('Assign stock error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 module.exports = router;

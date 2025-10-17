@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { acceptRequest, listRequests, modifyRequest, rejectRequest } from '../services/adminRequests';
+import { acceptRequest, listRequests, modifyRequest, rejectRequest, deleteRequest } from '../services/adminRequests';
 
 const AdminRequests = () => {
   const [q, setQ] = useState('');
@@ -42,6 +42,11 @@ const AdminRequests = () => {
     if (!Number.isFinite(valNum) || valNum <= 0) return alert('Enter a positive number');
     await modifyRequest(id, valNum);
     setEditing({ ...editing, [id]: undefined });
+    fetchRequests();
+  };
+  const onDelete = async (id) => {
+    if (!confirm('Delete this request?')) return;
+    await deleteRequest(id);
     fetchRequests();
   };
 
@@ -90,11 +95,14 @@ const AdminRequests = () => {
               <td>{r.status}</td>
               <td>{r.createdAt}</td>
               <td>
-                <button className="btn btn-sm btn-primary me-2" onClick={() => doAccept(r.id)}>Accept</button>
-                <button className="btn btn-sm btn-danger me-2" onClick={() => doReject(r.id)}>Reject</button>
-                {editing[r.id] === undefined && (
-                  <button className="btn btn-sm btn-warning" onClick={() => startEdit(r.id, r.amount)}>Modify Amount</button>
-                )}
+                <div className="btn-group" role="group" aria-label="Actions">
+                  <button className="btn btn-sm btn-primary" onClick={() => doAccept(r.id)}>Accept</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => doReject(r.id)}>Reject</button>
+                  {editing[r.id] === undefined && (
+                    <button className="btn btn-sm btn-warning" onClick={() => startEdit(r.id, r.amount)}>Modify</button>
+                  )}
+                  <button className="btn btn-sm btn-outline-secondary" onClick={() => onDelete(r.id)}>Delete</button>
+                </div>
               </td>
             </tr>
           ))}

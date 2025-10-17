@@ -26,3 +26,8 @@ export const deleteUser = async (id) => {
   const res = await axios.delete(`${API_BASE}/users/${id}`, { withCredentials: true });
   return res.data;
 };
+
+export const logout = async () => {
+  const res = await axios.post(`${API_BASE}/auth/logout`, {}, { withCredentials: true });
+  return res.data;
+};

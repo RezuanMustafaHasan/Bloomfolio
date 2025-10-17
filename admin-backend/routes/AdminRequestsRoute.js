@@ -65,6 +65,7 @@ router.post('/requests/:id/reject', requireAdmin, async (req, res) => {
   }
 });
 
+// Modify amount with auto-approval and purchase power application
 router.post('/requests/:id/modify', requireAdmin, async (req, res) => {
   try {
     const { newAmount } = req.body;
@@ -73,19 +74,58 @@ router.post('/requests/:id/modify', requireAdmin, async (req, res) => {
     }
     const reqDoc = await MoneyRequest.findById(req.params.id);
     if (!reqDoc) return res.status(404).json({ success: false, message: 'Request not found' });
-    const before = reqDoc.requestedAmount;
+
+    const amountBefore = reqDoc.requestedAmount;
     reqDoc.requestedAmount = newAmount;
-    reqDoc.status = 'Modified';
+
+    // Apply to user's purchase power immediately (auto-approve on modify)
+    const user = await User.findById(reqDoc.userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found for request' });
+
+    // If request had been previously approved, adjust delta; otherwise credit full new amount.
+    let delta = newAmount;
+    if (reqDoc.status === 'Approved') {
+      delta = newAmount - amountBefore;
+    }
+    user.purchasePower += delta;
+    await user.save();
+
+    // Record history as modified then approved
     reqDoc.history.push({
       action: 'Modified',
-      amountBefore: before,
+      amountBefore,
       amountAfter: newAmount,
       notes: '',
       actorRole: 'admin',
       actorId: req.admin._id,
     });
+    reqDoc.status = 'Approved';
+    reqDoc.approvedAt = new Date();
+    reqDoc.rejectedAt = undefined;
+    reqDoc.history.push({
+      action: 'Approved',
+      amountBefore: newAmount,
+      amountAfter: newAmount,
+      notes: 'Auto-approved on modify',
+      actorRole: 'admin',
+      actorId: req.admin._id,
+    });
+
     await reqDoc.save();
     res.json({ success: true, data: reqDoc });
+  } catch (err) {
+    console.error('Modify request error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Delete a request (for Approved/Rejected cleanup)
+router.delete('/requests/:id', requireAdmin, async (req, res) => {
+  try {
+    const reqDoc = await MoneyRequest.findById(req.params.id);
+    if (!reqDoc) return res.status(404).json({ success: false, message: 'Request not found' });
+    await MoneyRequest.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Request deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }

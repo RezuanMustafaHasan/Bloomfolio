@@ -21,3 +21,8 @@ export const modifyRequest = async (id, newAmount) => {
   const res = await axios.post(`${API_BASE}/requests/${id}/modify`, { newAmount }, { withCredentials: true });
   return res.data;
 };
+
+export const deleteRequest = async (id) => {
+  const res = await axios.delete(`${API_BASE}/requests/${id}`, { withCredentials: true });
+  return res.data;
+};

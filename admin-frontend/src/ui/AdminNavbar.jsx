@@ -24,6 +24,7 @@ const AdminNavbar = () => {
             {isAuthenticated && (
               <>
                 <li className="nav-item"><Link className="nav-link" to="/admin">Dashboard</Link></li>
+                <li className="nav-item"><Link className="nav-link" to="/admin/assign-stock">Assign Stock</Link></li>
                 <li className="nav-item"><Link className="nav-link" to="/admin/users">Users</Link></li>
                 <li className="nav-item"><Link className="nav-link" to="/admin/requests">Requests</Link></li>
               </>

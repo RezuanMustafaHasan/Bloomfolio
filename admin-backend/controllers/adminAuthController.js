@@ -13,9 +13,10 @@ module.exports.AdminSignup = async (req, res, next) => {
     const token = createAdminSecretToken(admin._id);
     res.cookie('admin_token', token, {
       withCredentials: true,
-      httpOnly: false,
+      httpOnly: true,
       sameSite: 'lax',
       path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(201).json({ message: 'Admin signed up successfully', success: true, admin });
     next();
@@ -42,12 +43,29 @@ module.exports.AdminLogin = async (req, res, next) => {
     const token = createAdminSecretToken(admin._id);
     res.cookie('admin_token', token, {
       withCredentials: true,
-      httpOnly: false,
+      httpOnly: true,
       sameSite: 'lax',
       path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(201).json({ message: 'Admin logged in successfully', success: true });
     next();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports.AdminLogout = async (req, res) => {
+  try {
+    res.cookie('admin_token', '', {
+      withCredentials: true,
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+    });
+    res.json({ success: true, message: 'Admin logged out successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
