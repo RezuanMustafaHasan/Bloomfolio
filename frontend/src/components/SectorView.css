@@ -1,0 +1,121 @@
+/* Sector headers and collapsible details */
+.sector-header td {
+  background: #f7f8fa;
+  border-top: 1px solid #e3e6ea;
+  border-bottom: 1px solid #e3e6ea;
+  font-weight: 600;
+  color: #2c3e50;
+  cursor: pointer;
+  padding: 10px 12px;
+}
+
+.sector-name {
+  margin-left: 8px;
+}
+
+.sector-count {
+  margin-left: 8px;
+  font-weight: 500;
+  color: #6b7c93;
+}
+
+.chevron {
+  display: inline-block;
+  transition: transform 200ms ease;
+  margin-right: 4px;
+}
+
+.chevron.open {
+  transform: rotate(90deg);
+}
+
+.sector-details-row td {
+  padding: 0;
+  background: #ffffff;
+}
+
+/* Smooth expand/collapse using max-height and opacity */
+.sector-details {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 250ms ease, opacity 250ms ease;
+}
+
+.sector-details.expanded {
+  max-height: 1200px; /* enough for many rows */
+  opacity: 1;
+}
+
+/* Inner table to reuse base table styles while avoiding double borders */
+.inner-sector-table {
+  width: 100%;
+}
+
+.inner-sector-table tr td {
+  border-top: 1px solid #f0f2f5;
+}
+
+/* Inline sector rows visibility */
+.sector-stock-row.hidden {
+  display: none;
+}
+.sector-stock-row.visible {
+  display: table-row;
+}
+
+/* Summary bar: distribution of gainers/losers/unchanged */
+.dist-bar {
+  display: inline-flex;
+  width: 220px;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #e9edf3;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.bar-segment {
+  height: 100%;
+}
+.bar-segment.gains {
+  background: #2ecc71; /* green */
+}
+.bar-segment.losses {
+  background: #f01157; /* pink/red */
+}
+.bar-segment.unchanged {
+  background: #5dade2; /* blue */
+}
+.dist-labels {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+.dist-labels .gains { color: #2ecc71; }
+.dist-labels .losses { color: #ff6b9a; }
+.dist-labels .unchanged { color: #5dade2; }
+
+/* Slight horizontal margin increase for SectorView */
+.sector-view .stock-table-container {
+  margin-left: 14px;
+  margin-right: 14px;
+}
+
+@media (max-width: 768px) {
+  .sector-header td {
+    padding: 12px 14px;
+  }
+  .sector-name {
+    display: inline-block;
+    max-width: 60%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sector-view .stock-table-container {
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+}

@@ -51,7 +51,9 @@ const TopNavbar = () => {
             <li className="nav-item">
               <Link className="nav-link nav-item" to="/Dashboard">Dashboard</Link>
             </li>
-            
+            <li className="nav-item">
+              <Link className="nav-link nav-item" to="/Sectors">Sectors</Link>
+            </li>
           </ul>
 {/*           
           <form className="d-flex me-3">

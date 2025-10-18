@@ -1,5 +1,6 @@
 import React from 'react';
 import StockTable from './StockTable';
+import DashboardOverview from './DashboardOverview';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -7,6 +8,7 @@ const Dashboard = () => {
     <div className="dashboard">
       <h1>Welcome to Bloomfolio</h1>
       <p>Your personal stock portfolio tracker</p>
+      <DashboardOverview />
       <StockTable />
     </div>
   );
