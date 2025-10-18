@@ -123,8 +123,8 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
                   tradingCode: code,
                   price,
                   quantity: execQty,
-                  orderId: original._id,
-                  matchedOrderId: match._id,
+                  // orderId: original._id,
+                  // matchedOrderId: match._id,
                   timestamp: new Date(),
                 }
               }
@@ -139,8 +139,8 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
                   tradingCode: code,
                   price,
                   quantity: execQty,
-                  orderId: match._id,
-                  matchedOrderId: original._id,
+                  // orderId: match._id,
+                  // matchedOrderId: original._id,
                   timestamp: new Date(),
                 }
               }
@@ -186,8 +186,8 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
                   tradingCode: code,
                   price,
                   quantity: execQty,
-                  orderId: match._id,
-                  matchedOrderId: original._id,
+                  // orderId: match._id,
+                  // matchedOrderId: original._id,
                   timestamp: new Date(),
                 }
               }
@@ -202,8 +202,8 @@ router.post('/execute/:orderId', requireUser, async (req, res) => {
                   tradingCode: code,
                   price,
                   quantity: execQty,
-                  orderId: original._id,
-                  matchedOrderId: match._id,
+                  // orderId: original._id,
+                  // matchedOrderId: match._id,
                   timestamp: new Date(),
                 }
               }

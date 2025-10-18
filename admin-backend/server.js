@@ -48,6 +48,7 @@ app.get('/api/health', (req, res) => {
 app.use('/admin/auth', authRoute);
 app.use('/admin', usersRoute);
 app.use('/admin', require('./routes/AdminRequestsRoute'));
+app.use('/admin', require('./routes/AdminOrdersRoute'));
 
 // MongoDB connection
 const connectDB = async () => {

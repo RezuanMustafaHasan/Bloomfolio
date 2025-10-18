@@ -49,8 +49,8 @@ const userSchema = new mongoose.Schema({
     tradingCode: { type: String, required: true },
     price: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
-    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
-    matchedOrderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+    // orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+    // matchedOrderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
     timestamp: { type: Date, default: Date.now }
   }],
   createdAt: {
