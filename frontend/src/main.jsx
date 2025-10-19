@@ -12,6 +12,7 @@ import Profile from './components/Profile.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import MoneyRequest from './pages/MoneyRequest.jsx';
 import SectorView from './components/SectorView.jsx';
+import MyOrders from './pages/MyOrders.jsx';
 
 
 createRoot(document.getElementById('root')).render(
@@ -26,6 +27,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/money-request" element={<MoneyRequest />} />
+        <Route path="/Orders" element={<MyOrders />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>

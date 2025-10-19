@@ -24,3 +24,18 @@ export const executeOrder = async (orderId) => {
   );
   return res.data;
 };
+
+export const myOrders = async () => {
+  const res = await axios.get(`${API_BASE}/orders/mine`, { withCredentials: true });
+  return res.data;
+};
+
+export const resubmitOrder = async (orderId, { orderType, askingPrice, quantity, tradingCode }) => {
+  const payload = {};
+  if (orderType) payload.orderType = orderType;
+  if (askingPrice !== undefined) payload.askingPrice = askingPrice;
+  if (quantity !== undefined) payload.quantity = quantity;
+  if (tradingCode) payload.tradingCode = tradingCode;
+  const res = await axios.post(`${API_BASE}/orders/${orderId}/resubmit`, payload, { withCredentials: true });
+  return res.data;
+};
