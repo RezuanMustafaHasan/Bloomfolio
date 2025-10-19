@@ -1,10 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './TradeModal.css';
 import { useAuth } from '../context/AuthContext.jsx';
-import { listOrders, placeOrder, executeOrder } from '../services/orders.js';
+import { listOrders, placeOrder, executeOrder, myOrders, deleteOrder } from '../services/orders.js';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }) => {
+  const [page, setPage] = useState(true);
+  const [myOrdersList, setMyOrdersList] = useState([]);
+  const [loadingMyOrders, setLoadingMyOrders] = useState(false);
+  const [myOrdersError, setMyOrdersError] = useState('');
   const { isAuthenticated, userId } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -65,8 +70,28 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
         setAvailableShares(null);
       }
     })();
+    // My Orders loading effect moved to top-level
   }, [isOpen, tradingCode, currentPrice, isAuthenticated, userId]);
 
+  // Load my orders when My Orders page is active
+  useEffect(() => {
+    if (!isOpen || page) return;
+    const run = async () => {
+      setLoadingMyOrders(true);
+      setMyOrdersError('');
+      try {
+        const res = await myOrders();
+        const data = res?.data || res || [];
+        const filtered = data.filter((o) => o?.tradingCode === tradingCode);
+        setMyOrdersList(filtered);
+      } catch (err) {
+        setMyOrdersError('Failed to load your orders');
+      } finally {
+        setLoadingMyOrders(false);
+      }
+    };
+    run();
+  }, [isOpen, page, tradingCode]);
   const buyOrders = useMemo(() => orders.filter(o => o.orderType === 'BUY'), [orders]);
   const sellOrders = useMemo(() => orders.filter(o => o.orderType === 'SELL'), [orders]);
 
@@ -135,17 +160,47 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
     }
   };
 
+  const handleDeleteOrder = async (id) => {
+    try {
+      await deleteOrder(id);
+      const res = await myOrders();
+      const data = res?.data || res || [];
+      setMyOrdersList(data.filter((o) => o?.tradingCode === tradingCode));
+    } catch (err) {
+      setMyOrdersError('Failed to delete order');
+    }
+  };
   if (!isOpen) return null;
 
   return (
+    <>
     <div className="trade-modal-overlay" role="dialog" aria-modal="true">
       <div className="trade-modal">
+        {page ? 
+        ( 
+        <>
         <div className="modal-header">
           <div className="title-group">
             <h3 className="modal-title">{isBuy ? 'Buy' : 'Sell'} {tradingCode}</h3>
             <span className="subtitle">Trade at market-appropriate price</span>
           </div>
-          <button className="close-btn" onClick={onClose} aria-label="Close">×</button>
+          <div className="header-actions d-flex align-items-center gap-2">
+            <button
+              type="button"
+              className={`toggle-btn ${page ? 'active' : ''}`}
+              onClick={() => setPage(true)}
+            >
+              Trade
+            </button>
+            <button
+              type="button"
+              className={`toggle-btn ${!page ? 'active' : ''}`}
+              onClick={() => setPage(false)}
+            >
+              My Orders
+            </button>
+            <button className="close-btn" onClick={onClose} aria-label="Close">×</button>
+          </div>
         </div>
 
         <div className="modal-body">
@@ -262,10 +317,87 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
               </form>
             </div>
           </div>
-        </div>
+        </div></>):(
+          <>
+            <div className="modal-header">
+              <div className="title-group">
+                <h3 className="modal-title">My Orders ({tradingCode})</h3>
+                <span className="subtitle">Review and manage your orders</span>
+              </div>
+              <div className="header-actions d-flex align-items-center gap-2">
+                <button
+                  type="button"
+                  className={`toggle-btn ${page ? 'active' : ''}`}
+                  onClick={() => setPage(true)}
+                >
+                  Trade
+                </button>
+                <button
+                  type="button"
+                  className={`toggle-btn ${!page ? 'active' : ''}`}
+                  onClick={() => setPage(false)}
+                >
+                  My Orders
+                </button>
+                <button className="close-btn" onClick={onClose} aria-label="Close">×</button>
+              </div>
+            </div>
+            <div className="modal-body">
+              <div className="orders-panel">
+                <div className="panel-header d-flex align-items-center justify-content-between">
+                  <h5 className="m-0">My Orders ({tradingCode})</h5>
+                </div>
+                {loadingMyOrders ? (
+                  <div className="py-3 text-center">Loading…</div>
+                ) : myOrdersError ? (
+                  <div className="alert alert-danger my-2">{myOrdersError}</div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-sm table-hover align-middle">
+                      <thead>
+                        <tr>
+                          <th>Type</th>
+                          <th>Price</th>
+                          <th>Qty</th>
+                          <th>Status</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {myOrdersList.length === 0 ? (
+                          <tr>
+                            <td colSpan="5" className="text-center text-muted">No orders found</td>
+                          </tr>
+                        ) : (
+                          myOrdersList.slice(0, 50).map((o) => (
+                            <tr key={o._id}>
+                              <td>{o.orderType}</td>
+                              <td>{Number(o.askingPrice).toFixed(2)}</td>
+                              <td>{o.quantity}</td>
+                              <td>{o.status || 'PENDING'}</td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-danger"
+                                  onClick={() => handleDeleteOrder(o._id)}
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
-  );
+  </>)
 };
 
 export default TradeModal;

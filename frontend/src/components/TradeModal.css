@@ -155,6 +155,43 @@
 .secondary-btn { padding: 10px 16px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #374151; cursor: pointer; }
 .secondary-btn:hover { background: #f9fafb; }
 
+.modal-header .title-group { flex: 1; }
+.header-actions .btn { padding: 6px 10px; font-size: 12px; }
+.header-actions .btn-outline-secondary { border-color: #d1d5db; color: #374151; }
+.header-actions .btn-outline-secondary:hover { background: #f9fafb; }
+
+.orders-panel .table thead th { font-size: 13px; color: #6b7280; font-weight: 600; }
+.orders-panel .table tbody td { font-size: 14px; color: #111827; }
+.orders-panel .table tbody td .btn { font-size: 12px; }
+
 @media (max-width: 992px) {
   .orders-columns { grid-template-columns: 1fr; }
 }
+
+/* Toggle buttons styling for Trade/My Orders */
+.header-actions .toggle-btn {
+  appearance: none;
+  border: 1px solid #a7ff5a; /* light blue border */
+  background: #ffffff;
+  color: #1fbb06; /* blue text */
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+.header-actions .toggle-btn:hover {
+  background: #eff6ff;
+}
+.header-actions .toggle-btn.active {
+  background: #1fbb06;
+  color: #ffffff;
+  border-color: #1fbb06;
+  box-shadow: 0 6px 18px rgba(31, 187, 6, 0.2);
+}
+.header-actions .toggle-btn.active:hover {
+  background: #199905;
+  border-color: #199905;
+}
+.header-actions .toggle-btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(31,187,6,0.18); }

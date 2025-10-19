@@ -39,3 +39,10 @@ export const resubmitOrder = async (orderId, { orderType, askingPrice, quantity,
   const res = await axios.post(`${API_BASE}/orders/${orderId}/resubmit`, payload, { withCredentials: true });
   return res.data;
 };
+
+export const deleteOrder = async (orderId) => {
+  const res = await axios.delete(`${API_BASE}/orders/${orderId}`, {
+    withCredentials: true,
+  });
+  return res.data;
+};

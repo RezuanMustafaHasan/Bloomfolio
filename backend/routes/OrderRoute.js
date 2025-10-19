@@ -125,4 +125,23 @@ router.post('/:id/resubmit', requireUser, async (req, res) => {
   }
 });
 
+// Delete an order (owned by current user)
+router.delete('/:id', requireUser, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    if (String(order.userId) !== String(req.userId)) {
+      return res.status(403).json({ message: 'Not authorized to delete this order' });
+    }
+    await Order.deleteOne({ _id: id });
+    return res.json({ success: true, message: 'Order deleted' });
+  } catch (err) {
+    console.error('Error deleting order:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 module.exports = router;
