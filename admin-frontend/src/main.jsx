@@ -9,6 +9,7 @@ import AdminLogin from './pages/AdminLogin.jsx';
 import UsersPage from './pages/UsersPage.jsx';
 import AdminRequests from './pages/AdminRequests.jsx';
 import AssignStock from './pages/AssignStock.jsx';
+import BulkFetch from './pages/BulkFetch.jsx'
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext.jsx';
 
 const RequireAdmin = ({ children }) => {
@@ -30,6 +31,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/admin/users" element={<RequireAdmin><UsersPage /></RequireAdmin>} />
           <Route path="/admin/requests" element={<RequireAdmin><AdminRequests /></RequireAdmin>} />
           <Route path="/admin/assign-stock" element={<RequireAdmin><AssignStock /></RequireAdmin>} />
+          <Route path="/admin/bulk-fetch" element={<RequireAdmin><BulkFetch /></RequireAdmin>} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </BrowserRouter>

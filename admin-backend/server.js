@@ -17,6 +17,7 @@ const adminAllowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
+  'http://localhost:5176',
 ].filter(Boolean);
 
 const adminCorsOptions = {
@@ -49,6 +50,7 @@ app.use('/admin/auth', authRoute);
 app.use('/admin', usersRoute);
 app.use('/admin', require('./routes/AdminRequestsRoute'));
 app.use('/admin', require('./routes/AdminOrdersRoute'));
+app.use('/admin', require('./routes/AdminBulkRoute'));
 
 // MongoDB connection
 const connectDB = async () => {
