@@ -1,60 +1,69 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { login as loginApi } from '../services/auth';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from "react";
+import "./SignUpLogIn.css";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import AuthModal from "../ui/AuthModal";
 
-const Login = () => {
+function Login() {
   const navigate = useNavigate();
-  const { login, checkAuth } = useAuth();
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [value, setValue] = useState({ email: "", password: "" });
+  const { login } = useAuth();
 
-  const onChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
     try {
-      const res = await loginApi(form);
-      if (res?.success) {
-        login();
-        checkAuth();
-        navigate('/Dashboard');
-      } else {
-        setError(res?.message || 'Login failed');
-      }
-    } catch (err) {
-      setError('Login failed');
-    } finally {
-      setLoading(false);
+      await login(value.email, value.password);
+      navigate("/Dashboard");
+    } catch (error) {
+      alert("Error occured when log in. Please try again later!");
     }
   };
 
   return (
-    <div className="signup-login">
-      <div className="container mx-auto" style={{ maxWidth: 480 }}>
-      <h2 className="mb-3">Log In</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-      <form onSubmit={onSubmit}>
-        <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input type="email" name="email" value={form.email} onChange={onChange} className="form-control" required />
+    <AuthModal title="Log In">
+      <form onSubmit={handleSubmit}>
+        <div className="auth-grid">
+          <div>
+            <div className="mb-3">
+              <label htmlFor="email" className="form-label">Email</label>
+              <input
+                type="email"
+                id="email"
+                className="form-control"
+                value={value.email}
+                onChange={(e) => setValue({ ...value, email: e.target.value })}
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="password" className="form-label">Password</label>
+              <input
+                type="password"
+                id="password"
+                className="form-control"
+                value={value.password}
+                onChange={(e) => setValue({ ...value, password: e.target.value })}
+                placeholder="Enter password"
+                required
+              />
+            </div>
+            <div className="auth-actions">
+              <button type="submit" className="btn-modern-primary">Log In</button>
+              <button type="button" className="btn-modern-secondary" onClick={() => navigate('/Dashboard')}>Cancel</button>
+              <button type="button" className="btn-modern-secondary" onClick={() => navigate('/signup')}>Go to Sign Up</button>
+            </div>
+          </div>
+          <div>
+            <p className="text-muted" style={{marginTop: 6}}>
+              Use your existing credentials to access trading and portfolio.
+            </p>
+          </div>
         </div>
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input type="password" name="password" value={form.password} onChange={onChange} className="form-control" required />
-        </div>
-        <button className="btn btn-success" type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Log In'}
-        </button>
       </form>
-      </div>
-    </div>
+    </AuthModal>
   );
-};
+}
 
 export default Login;

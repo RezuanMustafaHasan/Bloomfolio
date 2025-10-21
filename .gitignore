@@ -11,6 +11,7 @@ out/
 .vite/
 .parcel-cache/
 coverage/
+Stock-fetcher-mongo/
 
 # Logs
 *.log

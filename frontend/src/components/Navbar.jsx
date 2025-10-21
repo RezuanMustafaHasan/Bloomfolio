@@ -28,6 +28,11 @@ const TopNavbar = () => {
     setIsNavOpen(!isNavOpen);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/Dashboard');
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white custom-navbar shadow-sm fixed-top">
       <div className="container-fluid">
@@ -68,7 +73,7 @@ const TopNavbar = () => {
           
           <ul className="navbar-nav">
             {!isAuthenticated ? (
-              <>
+              <> 
                 <li className="nav-item">
                   <Link className="nav-link nav-item" to="/signup">Sign Up</Link>
                 </li>
@@ -80,14 +85,11 @@ const TopNavbar = () => {
               </>
             ) : (
               <>
-              {/* <li className="nav-item ">
-                <Link className="nav-link nav-item" to="/Profile">Purchase Power: {user?.purchasePower || '0'}</Link>
-              </li> */}
               <li className="nav-item">
                 <Link className="nav-link nav-item" to="/Profile">{user?.name || 'Profile'}</Link>
               </li>
               <li className="nav-item">
-                <button className="btn btn-success login-btn" onClick={logout}>
+                <button className="btn btn-success login-btn" onClick={handleLogout}>
                   Log Out
                 </button>
               </li>
