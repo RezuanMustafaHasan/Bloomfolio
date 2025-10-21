@@ -263,7 +263,7 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
                 <div className="form-header">
                   <h5>Trading Form</h5>
                   {isBuy ? (
-                    <div className="power">Purchase Power: {purchasePower == null ? '—' : `$${purchasePower}`}</div>
+                    <div className="power">Purchase Power: {purchasePower == null ? '—' : `৳${purchasePower}`}</div>
                   ) : (
                     <div className="power">Available Shares: {availableShares == null ? '—' : `${availableShares}`}</div>
                   )}
@@ -302,7 +302,7 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
                 </div>
 
                 <div className="form-meta">
-                  <div className="estimate">Estimated {isBuy ? 'Cost' : 'Proceeds'}: {estimatedCost == null ? '—' : `$${estimatedCost.toFixed(2)}`}</div>
+                  <div className="estimate">Estimated {isBuy ? 'Cost' : 'Proceeds'}: {estimatedCost == null ? '—' : `৳${estimatedCost.toFixed(2)}`}</div>
                 </div>
 
                 {placeError && <div className="error">{placeError}</div>}

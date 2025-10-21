@@ -2,6 +2,8 @@
   background: #0f1115;
   color: #d1d5db; /* slate-300 */
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 .footer-container {
@@ -18,8 +20,6 @@
   align-items: start;
   padding-bottom: 12px;
 }
-
-.footer-item {}
 
 .footer-title {
   font-size: 12px;

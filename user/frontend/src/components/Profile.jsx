@@ -104,7 +104,7 @@ export default function Profile() {
       <div className="container">
         <div className="row">
           <div className="col-6">
-            <h3>Purchase Power : {formatNumber(user?.purchasePower)}</h3>
+            <h3>Purchase Power : ৳{formatNumber(user?.purchasePower)}</h3>
           </div>
           <div className="col-6 add-fund-container">
             <button className="btn btn-primary add-fund-btn" onClick={() => navigate('/money-request')}>Add Funds</button>
@@ -118,11 +118,11 @@ export default function Profile() {
             <div className="d-flex gap-3 align-items-center">
               <div className="summary-item">
                 <span className="label">Portfolio Size:</span>
-                <span className="value">{formatNumber(overallMarketValue)}</span>
+                <span className="value"> ৳{formatNumber(overallMarketValue)}</span>
               </div>
               <div className="summary-item">
-                <span className="label">Overall Gain/Loss:</span>
-                <span className={`value ${overallGain >= 0 ? 'positive' : 'negative'}`}>{formatNumber(overallGain)}</span>
+                <span className="label">Overall Gain/Loss: </span>
+                <span className={`value ${overallGain >= 0 ? 'positive' : 'negative'}`}> ৳{formatNumber(overallGain)}</span>
               </div>
             </div>
           </div>

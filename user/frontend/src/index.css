@@ -31,6 +31,10 @@ body {
   padding-top: var(--navbar-height);
   min-width: 320px;
   min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
