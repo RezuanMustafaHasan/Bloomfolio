@@ -12,10 +12,19 @@ const StockInfoCards = ({ stockData }) => {
   };
 
   const formatCurrency = (num) => {
-    return num ? `$${formatNumber(num)}` : 'N/A';
+    return num ? ` ৳${formatNumber(num)}` : 'N/A';
   };
 
   const latestShareholding = shareholding?.[shareholding.length - 1] || {};
+  // Compute last three entries (most recent)
+  const lastThreeYears = (() => {
+    if (!Array.isArray(shareholding) || shareholding.length === 0) return [];
+    // Sort by date descending and take the last 3 entries
+    return shareholding
+      .filter(s => s?.asOn) // Only entries with valid dates
+      .sort((a, b) => new Date(b.asOn) - new Date(a.asOn)) // Sort newest first
+      .slice(0, 3); // Take top 3
+  })();
 
   return (
     <div className="stock-info-cards">
@@ -29,22 +38,22 @@ const StockInfoCards = ({ stockData }) => {
             <div className="card-body">
               <div className="info-item">
                 <span className="label">Opening Price:</span>
-                <span className="value">${marketInformation?.openingPrice?.toFixed(2) || 'N/A'}</span>
+                <span className="value"> ৳{marketInformation?.openingPrice?.toFixed(2) || 'N/A'}</span>
               </div>
               <div className="info-item">
                 <span className="label">Closing Price:</span>
-                <span className="value">${marketInformation?.closingPrice?.toFixed(2) || 'N/A'}</span>
+                <span className="value"> ৳{marketInformation?.closingPrice?.toFixed(2) || 'N/A'}</span>
               </div>
               <div className="info-item">
                 <span className="label">Day's Range:</span>
                 <span className="value">
-                  ${marketInformation?.daysRange?.low?.toFixed(2) || 'N/A'} - ${marketInformation?.daysRange?.high?.toFixed(2) || 'N/A'}
+                   ৳{marketInformation?.daysRange?.low?.toFixed(2) || 'N/A'} -  ৳{marketInformation?.daysRange?.high?.toFixed(2) || 'N/A'}
                 </span>
               </div>
               <div className="info-item">
                 <span className="label">52 Week Range:</span>
                 <span className="value">
-                  ${marketInformation?.fiftyTwoWeeksMovingRange?.low?.toFixed(2) || 'N/A'} - ${marketInformation?.fiftyTwoWeeksMovingRange?.high?.toFixed(2) || 'N/A'}
+                   ৳{marketInformation?.fiftyTwoWeeksMovingRange?.low?.toFixed(2) || 'N/A'} -  ৳{marketInformation?.fiftyTwoWeeksMovingRange?.high?.toFixed(2) || 'N/A'}
                 </span>
               </div>
               <div className="info-item">
@@ -68,7 +77,7 @@ const StockInfoCards = ({ stockData }) => {
             <div className="card-body">
               <div className="info-item">
                 <span className="label">Face Value:</span>
-                <span className="value">${basicInformation?.faceValue || 'N/A'}</span>
+                <span className="value"> ৳{basicInformation?.faceValue || 'N/A'}</span>
               </div>
               <div className="info-item">
                 <span className="label">Market Lot:</span>
@@ -126,7 +135,7 @@ const StockInfoCards = ({ stockData }) => {
         </div>
 
         {/* Shareholding Pattern Card */}
-        <div className="col-md-6 col-lg-4 mb-4">
+        <div className="col-md-6 col-lg-12 mb-4">
           <div className="card info-card">
             <div className="card-header">
               <h5>Shareholding Pattern</h5>
@@ -139,133 +148,125 @@ const StockInfoCards = ({ stockData }) => {
               </small>
             </div>
             <div className="card-body">
-              <div className="shareholding-chart-container">
-                <svg width="200" height="200" viewBox="0 0 200 200" className="shareholding-pie-chart">
-                  <defs>
-                    <linearGradient id="publicGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#2E5BBA" />
-                      <stop offset="100%" stopColor="#1E3A8A" />
-                    </linearGradient>
-                    <linearGradient id="instituteGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#60A5FA" />
-                      <stop offset="100%" stopColor="#3B82F6" />
-                    </linearGradient>
-                    <linearGradient id="sponsorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#93C5FD" />
-                      <stop offset="100%" stopColor="#60A5FA" />
-                    </linearGradient>
-                    <linearGradient id="foreignGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#DBEAFE" />
-                      <stop offset="100%" stopColor="#BFDBFE" />
-                    </linearGradient>
-                  </defs>
-                  
-                  {(() => {
-                    const centerX = 100;
-                    const centerY = 100;
-                    const radius = 80;
-                    
-                    const publicShare = latestShareholding?.public || 0;
-                    const instituteShare = latestShareholding?.institute || 0;
-                    const sponsorShare = latestShareholding?.sponsorDirector || 0;
-                    const foreignShare = latestShareholding?.foreign || 0;
-                    const governmentShare = latestShareholding?.government || 0;
-                    
-                    const total = publicShare + instituteShare + sponsorShare + foreignShare + governmentShare;
-                    
-                    let currentAngle = -90; // Start from top
-                    const segments = [];
-                    
-                    const createSegment = (value, color, label) => {
-                      if (value <= 0) return null;
-                      
-                      const percentage = (value / total) * 100;
-                      const angle = (value / total) * 360;
-                      const startAngle = currentAngle;
-                      const endAngle = currentAngle + angle;
-                      
-                      const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
-                      const startY = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
-                      const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
-                      const endY = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
-                      
-                      const largeArcFlag = angle > 180 ? 1 : 0;
-                      
-                      const pathData = [
-                        `M ${centerX} ${centerY}`,
-                        `L ${startX} ${startY}`,
-                        `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-                        'Z'
-                      ].join(' ');
-                      
-                      currentAngle = endAngle;
-                      
-                      return {
-                        path: pathData,
-                        color: color,
-                        label: label,
-                        percentage: percentage.toFixed(2)
-                      };
-                    };
-                    
-                    if (publicShare > 0) segments.push(createSegment(publicShare, 'url(#publicGradient)', 'Public'));
-                    if (instituteShare > 0) segments.push(createSegment(instituteShare, 'url(#instituteGradient)', 'Institute'));
-                    if (sponsorShare > 0) segments.push(createSegment(sponsorShare, 'url(#sponsorGradient)', 'Sponsor/Director'));
-                    if (foreignShare > 0) segments.push(createSegment(foreignShare, 'url(#foreignGradient)', 'Foreign'));
-                    if (governmentShare > 0) segments.push(createSegment(governmentShare, '#E5E7EB', 'Government'));
-                    
-                    return segments.filter(Boolean).map((segment, index) => (
-                      <path
-                        key={index}
-                        d={segment.path}
-                        fill={segment.color}
-                        stroke="#ffffff"
-                        strokeWidth="2"
-                        className="pie-segment"
-                      />
-                    ));
-                  })()}
-                </svg>
-                
-                {/* Legend */}
-                <div className="shareholding-legend">
-                  {latestShareholding?.public > 0 && (
-                    <div className="legend-item">
-                      <div className="legend-color" style={{background: 'linear-gradient(135deg, #2E5BBA, #1E3A8A)'}}></div>
-                      <span className="legend-label">Public</span>
-                      <span className="legend-value">{latestShareholding.public.toFixed(2)}%</span>
+              {/* Multi-year charts */}
+              <div className="shareholding-multiyear">
+                {lastThreeYears.length > 0 ? (
+                  lastThreeYears.map((entry, index) => (
+                    <div className="shareholding-chart-item col-4" key={`${entry.asOn}-${index}`}>
+                      <div className="shareholding-date">
+                        {entry?.asOn ? new Date(entry.asOn).toLocaleDateString('en-US', {
+                          year: 'numeric', month: 'short', day: 'numeric'
+                        }) : '—'}
+                      </div>
+                      <svg width="160" height="160" viewBox="0 0 200 200" className="shareholding-pie-chart">
+                        <defs>
+                          <linearGradient id={`publicGradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#2E5BBA" />
+                            <stop offset="100%" stopColor="#1E3A8A" />
+                          </linearGradient>
+                          <linearGradient id={`instituteGradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#60A5FA" />
+                            <stop offset="100%" stopColor="#3B82F6" />
+                          </linearGradient>
+                          <linearGradient id={`sponsorGradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#93C5FD" />
+                            <stop offset="100%" stopColor="#60A5FA" />
+                          </linearGradient>
+                          <linearGradient id={`foreignGradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#DBEAFE" />
+                            <stop offset="100%" stopColor="#BFDBFE" />
+                          </linearGradient>
+                        </defs>
+                        {(() => {
+                          const centerX = 100;
+                          const centerY = 100;
+                          const radius = 80;
+                          const publicShare = entry?.public || 0;
+                          const instituteShare = entry?.institute || 0;
+                          const sponsorShare = entry?.sponsorDirector || 0;
+                          const foreignShare = entry?.foreign || 0;
+                          const governmentShare = entry?.government || 0;
+                          const total = publicShare + instituteShare + sponsorShare + foreignShare + governmentShare || 1;
+                          let currentAngle = -90; // Start from top
+                          const segments = [];
+                          const createSegment = (value, color) => {
+                            if (value <= 0) return null;
+                            const angle = (value / total) * 360;
+                            const startAngle = currentAngle;
+                            const endAngle = currentAngle + angle;
+                            const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
+                            const startY = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
+                            const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
+                            const endY = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
+                            const largeArcFlag = angle > 180 ? 1 : 0;
+                            const pathData = [
+                              `M ${centerX} ${centerY}`,
+                              `L ${startX} ${startY}`,
+                              `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY}`,
+                              'Z'
+                            ].join(' ');
+                            currentAngle = endAngle;
+                            return (
+                              <path
+                                d={pathData}
+                                fill={color}
+                                stroke="#ffffff"
+                                strokeWidth="2"
+                                className="pie-segment"
+                              />
+                            );
+                          };
+                          if (publicShare > 0) segments.push(createSegment(publicShare, `url(#publicGradient-${index})`));
+                          if (instituteShare > 0) segments.push(createSegment(instituteShare, `url(#instituteGradient-${index})`));
+                          if (sponsorShare > 0) segments.push(createSegment(sponsorShare, `url(#sponsorGradient-${index})`));
+                          if (foreignShare > 0) segments.push(createSegment(foreignShare, `url(#foreignGradient-${index})`));
+                          if (governmentShare > 0) segments.push(createSegment(governmentShare, '#92b4f9ff'));
+                          return segments.filter(Boolean);
+                        })()}
+                      </svg>
+                      <div className="shareholding-mini-legend">
+                        {entry?.public > 0 && (
+                          <div className="legend-item ">
+                            <div className="legend-color" style={{background: 'linear-gradient(135deg, #2E5BBA, #1E3A8A)'}}></div>
+                            <span className="legend-label">Public</span>
+                            <span className="legend-value">{(entry.public).toFixed(2)}%</span>
+                          </div>
+                        )}
+                        {entry?.institute > 0 && (
+                          <div className="legend-item">
+                            <div className="legend-color" style={{background: 'linear-gradient(135deg, #60A5FA, #3B82F6)'}}></div>
+                            <span className="legend-label">Institute</span>
+                            <span className="legend-value">{(entry.institute).toFixed(2)}%</span>
+                          </div>
+                        )}
+                        {entry?.sponsorDirector > 0 && (
+                          <div className="legend-item">
+                            <div className="legend-color" style={{background: 'linear-gradient(135deg, #93C5FD, #60A5FA)'}}></div>
+                            <span className="legend-label">Sponsor/Director</span>
+                            <span className="legend-value">{(entry.sponsorDirector).toFixed(2)}%</span>
+                          </div>
+                        )}
+                        {entry?.foreign > 0 && (
+                          <div className="legend-item">
+                            <div className="legend-color" style={{background: 'linear-gradient(135deg, #DBEAFE, #BFDBFE)'}}></div>
+                            <span className="legend-label">Foreign</span>
+                            <span className="legend-value">{(entry.foreign).toFixed(2)}%</span>
+                          </div>
+                        )}
+                        {entry?.government > 0 && (
+                          <div className="legend-item">
+                            <div className="legend-color" style={{backgroundColor: '#92b4f9ff'}}></div>
+                            <span className="legend-label">Government</span>
+                            <span className="legend-value">{(entry.government).toFixed(2)}%</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  {latestShareholding?.institute > 0 && (
-                    <div className="legend-item">
-                      <div className="legend-color" style={{background: 'linear-gradient(135deg, #60A5FA, #3B82F6)'}}></div>
-                      <span className="legend-label">Institute</span>
-                      <span className="legend-value">{latestShareholding.institute.toFixed(2)}%</span>
-                    </div>
-                  )}
-                  {latestShareholding?.sponsorDirector > 0 && (
-                    <div className="legend-item">
-                      <div className="legend-color" style={{background: 'linear-gradient(135deg, #93C5FD, #60A5FA)'}}></div>
-                      <span className="legend-label">Sponsor/Director</span>
-                      <span className="legend-value">{latestShareholding.sponsorDirector.toFixed(2)}%</span>
-                    </div>
-                  )}
-                  {latestShareholding?.foreign > 0 && (
-                    <div className="legend-item">
-                      <div className="legend-color" style={{background: 'linear-gradient(135deg, #DBEAFE, #BFDBFE)'}}></div>
-                      <span className="legend-label">Foreign</span>
-                      <span className="legend-value">{latestShareholding.foreign.toFixed(2)}%</span>
-                    </div>
-                  )}
-                  {latestShareholding?.government > 0 && (
-                    <div className="legend-item">
-                      <div className="legend-color" style={{backgroundColor: '#E5E7EB'}}></div>
-                      <span className="legend-label">Government</span>
-                      <span className="legend-value">{latestShareholding.government.toFixed(2)}%</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+                  ))
+                ) : (
+                  <div className="text-muted">No shareholding data available</div>
+                )}
+              </div> 
             </div>
           </div>
         </div>

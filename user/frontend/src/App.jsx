@@ -7,6 +7,7 @@ import StockChart from './components/StockChart';
 import StockInfoCards from './components/StockInfoCards';
 import CorporateActions from './components/CorporateActions';
 import FinancialPerformance from './components/FinancialPerformance';
+import CandlestickChart from './components/CandlestickChart';
 import './App.css';
 // import stockData from './assets/stockData'
 import sd from './assets/stockData'
@@ -45,6 +46,8 @@ function App() {
           <StockInfoCards stockData={stockData}/>
           <CorporateActions stockData={stockData}/>
           <FinancialPerformance stockData={stockData}/>
+          {/* Candlestick chart right after financial performance */}
+          <CandlestickChart />
         </div>
       </div>
   );

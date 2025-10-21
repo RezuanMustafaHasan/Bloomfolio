@@ -31,7 +31,7 @@ const StockHeader = ({ stockData }) => {
             <div className="stock-price-info">
               <div className="row">
                 <div className={leftColClass}>
-                  <span className="current-price">${lastTradingPrice.toFixed(2)}</span>
+                  <span className="current-price">৳{lastTradingPrice.toFixed(2)}</span>
                   <span className={`price-change ${isPositive ? 'positive' : 'negative'}`}>
                     {isPositive ? '+' : ''}{change.toFixed(2)} ({changePercentage.toFixed(2)}%)
                   </span>
