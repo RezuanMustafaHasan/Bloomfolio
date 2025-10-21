@@ -59,6 +59,9 @@ const TopNavbar = () => {
             <li className="nav-item">
               <Link className="nav-link nav-item" to="/Sectors">Sectors</Link>
             </li>
+            <li className="nav-item">
+              <Link className="nav-link nav-item" to="/ai-advisor">AI Advisor</Link>
+            </li>
             
           </ul>
 {/*           

@@ -12,6 +12,7 @@ import Profile from './components/Profile.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import MoneyRequest from './pages/MoneyRequest.jsx';
 import SectorView from './components/SectorView.jsx';
+import AIFinancialAdvisor from './pages/AIFinancialAdvisor.jsx';
 
 
 
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/money-request" element={<MoneyRequest />} />
+        <Route path="/ai-advisor" element={<AIFinancialAdvisor />} />
         // new default redirect from root
         <Route path="/" element={<Navigate to="/Dashboard" replace />} />
       </Routes>
