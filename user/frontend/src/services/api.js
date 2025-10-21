@@ -5,7 +5,7 @@ const API_BASE_URL = 'http://localhost:8080';
 // Create axios instance with default config
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 120000, // 2 minutes to allow long AI responses
+  timeout: 300000, // 5 minutes to allow long AI retries
   headers: {
     'Content-Type': 'application/json',
   },
@@ -48,14 +48,15 @@ export const stockAPI = {
   },
 };
 
-// AI chat API
+// AI chat + Sessions API
 export const aiAPI = {
-  chat: async ({ tradingCodes, question, model }) => {
+  chat: async ({ tradingCodes, question, model, sessionId }) => {
     try {
       const response = await apiClient.post('/api/ai/chat', {
         tradingCodes,
         question,
         model,
+        sessionId,
       }, { withCredentials: true });
       return response.data;
     } catch (error) {
@@ -65,6 +66,22 @@ export const aiAPI = {
         message: error.response?.data?.message || error.response?.data?.error || error.message || 'AI chat failed',
         error: error.response?.data?.error || error.message,
       };
+    }
+  },
+  listSessions: async () => {
+    try {
+      const response = await apiClient.get('/api/ai/sessions', { withCredentials: true });
+      return response.data;
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || error.message };
+    }
+  },
+  getSession: async (id) => {
+    try {
+      const response = await apiClient.get(`/api/ai/session/${id}`, { withCredentials: true });
+      return response.data;
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || error.message };
     }
   },
 };

@@ -4,16 +4,19 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AuthModal from "../ui/AuthModal";
+import { login as loginApi } from "../services/auth";
 
 function Login() {
   const navigate = useNavigate();
   const [value, setValue] = useState({ email: "", password: "" });
-  const { login } = useAuth();
+  const { login: refreshAuth } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(value.email, value.password);
+      // Call backend to set auth cookie, then refresh local auth state
+      await loginApi({ email: value.email, password: value.password });
+      refreshAuth();
       navigate("/Dashboard");
     } catch (error) {
       alert("Error occured when log in. Please try again later!");

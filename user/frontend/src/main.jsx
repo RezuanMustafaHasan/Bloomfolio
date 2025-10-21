@@ -13,6 +13,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import MoneyRequest from './pages/MoneyRequest.jsx';
 import SectorView from './components/SectorView.jsx';
 import AIFinancialAdvisor from './pages/AIFinancialAdvisor.jsx';
+import Footer from './components/Footer.jsx';
 
 
 
@@ -32,6 +33,7 @@ createRoot(document.getElementById('root')).render(
         // new default redirect from root
         <Route path="/" element={<Navigate to="/Dashboard" replace />} />
       </Routes>
+      <Footer />
     </BrowserRouter>
   </AuthProvider>
 )

@@ -36,9 +36,9 @@ const TopNavbar = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white custom-navbar shadow-sm fixed-top">
       <div className="container-fluid">
-        <a className="navbar-brand brand-logo" href="#">
-          <span className="brand-text">Robinhood</span>
-        </a>
+        <span className="navbar-brand brand-logo" >
+           <Link className="brand-text" to="/Dashboard">Bloomfolio</Link>
+        </span>
         
         <button 
           className="navbar-toggler" 
