@@ -227,7 +227,7 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
                           {buyOrders.slice(0, 10).map(o => (
                             <li key={o._id} className="order-item">
                               {/* <span className="type-badge buy">BUY</span> */}
-                                <span className="price">${o.askingPrice?.toFixed?.(2) ?? o.askingPrice}</span>
+                                <span className="price">৳{o.askingPrice?.toFixed?.(2) ?? o.askingPrice}</span>
                                 <span className="qty">× {o.quantity}</span>
                               {/* <span className={`status ${o.status?.toLowerCase()}`}>{o.status}</span> */}
                             </li>
@@ -244,7 +244,7 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
                           {sellOrders.slice(0, 10).map(o => (
                             <li key={o._id} className="order-item">
                               {/* <span className="type-badge sell">SELL</span> */}
-                              <span className="price">${o.askingPrice?.toFixed?.(2) ?? o.askingPrice}</span>
+                              <span className="price">৳{o.askingPrice?.toFixed?.(2) ?? o.askingPrice}</span>
                               <span className="qty">× {o.quantity}</span>
                               {/* <span className={`status ${o.status?.toLowerCase()}`}>{o.status}</span> */}
                             </li>

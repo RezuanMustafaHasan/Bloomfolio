@@ -58,7 +58,7 @@ const FinancialPerformance = ({ stockData }) => {
                       {periodEndMarketPrice?.map((price, index) => (
                         <tr key={index}>
                           <td>{price.period}</td>
-                          <td>${price.price?.toFixed(2) || 'N/A'}</td>
+                          <td>৳{price.price?.toFixed(2) || 'N/A'}</td>
                         </tr>
                       ))}
                     </tbody>
