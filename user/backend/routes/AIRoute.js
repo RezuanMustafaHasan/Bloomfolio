@@ -109,6 +109,7 @@ router.post('/chat', requireUser, async (req, res) => {
 
     // Call Gemini REST API with retry and fallback
     async function callGemini(mn, prompt) {
+      console.log("Prompt to Gemini:", prompt);
       const endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/${mn}:generateContent?key=${apiKey}`;
       const payload = {
         contents: [

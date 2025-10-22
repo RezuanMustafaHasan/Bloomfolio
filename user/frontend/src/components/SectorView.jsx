@@ -36,11 +36,11 @@ const SectorView = () => {
       const stocksData = response.data || [];
       setStocks(stocksData);
       // initialize expanded sectors to show all by default if none persisted
-      setExpandedSectors(prev => {
-        if (prev.size) return prev;
-        const uniqueSectors = Array.from(new Set(stocksData.map(s => s.sector || 'Uncategorized')));
-        return new Set(uniqueSectors);
-      });
+      // setExpandedSectors(prev => {
+      //   if (prev.size) return prev;
+      //   const uniqueSectors = Array.from(new Set(stocksData.map(s => s.sector || 'Uncategorized')));
+      //   return new Set(uniqueSectors);
+      // });
     } catch (err) {
       console.error('Error fetching stocks:', err);
       setError('Failed to fetch stocks. Please try again.');
