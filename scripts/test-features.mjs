@@ -61,6 +61,6 @@ try {
  console.log('PASS admin stock assignment and bulk-sync cancellation/completion');
  const chat=await call(user,'/api/ai/chat',{tradingCodes:['GP'],question:'What does the latest GP quote show? Mention its date, price and sector. Use three short sentences.'});assert.ok(chat.data.answer.length>30);assert.ok(!chat.data.answer.includes('$'),'DSE quote response must use BDT');
  const saved=await call(user,`/api/ai/session/${chat.data.sessionId}`,undefined,'get');assert.equal(saved.data.messages.length,2);
- writeFileSync(new URL('../.runtime/feature-evidence.json',import.meta.url),JSON.stringify({symbol:'GP',sessionId:chat.data.sessionId,transactionId:tx,model:chat.data.model,checks:'passed'},null,2));
+ writeFileSync(new URL('../.runtime/feature-evidence.json',import.meta.url),JSON.stringify({symbol:'GP',quoteDate:detail.marketInformation.asOfDate.slice(0,10),sessionId:chat.data.sessionId,transactionId:tx,model:chat.data.model,checks:'passed'},null,2));
  console.log(`PASS generated ${chat.data.provider} advisor response and saved conversation`);
 }finally{await Promise.all([user.dispose(),seller.dispose(),admin.dispose(),guest.dispose()]);}

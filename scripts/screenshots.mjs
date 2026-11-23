@@ -57,7 +57,7 @@ try {
  await go(web('/Sectors'),()=>page.getByText('Bank',{exact:true}).first().waitFor());await page.getByText('Bank',{exact:true}).first().click();await page.getByRole('cell',{name:'BRACBANK',exact:true}).waitFor();await shot('sectors');
  await go(web('/ai-advisor'),()=>page.getByText('AI Financial Advisor',{exact:true}).waitFor());
  await page.locator('.history-item').filter({hasText:'What does the latest GP quote show?'}).first().click();
- await expect(page.locator('.msg-bubble.ai').last()).toContainText('2026-11-23');await shot('ai-advisor');
+ await expect(page.locator('.msg-bubble.ai').last()).toContainText(evidence.quoteDate);await shot('ai-advisor');
  // Check a second symbol and ensure charts do not retain the first symbol's bars.
  await go(web('/stocks/SQURPHARMA'),()=>page.getByRole('heading',{name:/Square Pharmaceuticals/i}).waitFor());
  await expect(page.getByTestId('candlestick-chart')).toHaveAttribute('data-bars',/^\d{2,}$/);
