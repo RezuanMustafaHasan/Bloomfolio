@@ -20,6 +20,7 @@ const StockTable = () => {
     setError(null);
     try {
       const response = await stockAPI.getAllStocks();
+      if(!response.success) throw new Error(response.error);
       setStocks(response.data || []);
     } catch (err) {
       console.error('Error fetching stocks:', err);
@@ -145,6 +146,7 @@ const StockTable = () => {
       <div className="table-header">
         <div className="header-info">
           <h2>Latest Share Price</h2>
+          <p className="source-note">As of {stocks[0]?.marketInformation?.asOfDate?.slice(0,10)} · <a href="https://www.stockchartbd.com/developers.php">DSE Intelligence</a> / dsebd.org · {stocks.some(s=>s.dataSource?.stale)?'Saved quotes':'Latest available quotes'}</p>
           <div className="market-summary">
             <div className="summary-item">
               <span className="label">Total Stocks:</span>

@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
 
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
+  res.json({ status: 'OK', message: 'Server is running', database: mongoose.connection.name });
 });
 
 
@@ -80,68 +80,21 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+const marketData = require('./services/marketData');
 app.get('/fetch-details/:tradingCode', async (req, res) => {
   try {
-    const { tradingCode } = req.params;
-    
-    // Import Stock model
-    const Stock = require('./models/Stock');
-    
-    // Find stock by trading code
-    const stock = await Stock.findOne({ tradingCode: tradingCode });
-    
-    if (!stock) {
-      return res.status(404).json({
-        success: false,
-        message: `Stock with trading code '${tradingCode}' not found`
-      });
-    }
-    
-    // Send stock details as response
-    res.json({
-      success: true,
-      data: stock
-    });
-    
-  } catch (error) {
-    console.error('Error fetching stock details:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error while fetching stock details'
-    });
-  }
+    const stock = await marketData.stockDetails(req.params.tradingCode);
+    if (!stock) return res.status(404).json({success:false,message:'Stock not found'});
+    res.json({success:true,data:stock});
+  } catch(error) { res.status(error.status || 502).json({success:false,message:error.message}); }
 });
-
-// Fetch all stocks endpoint
 app.get('/fetch-all-stocks', async (req, res) => {
-  try {
-    // Import Stock model
-    const Stock = require('./models/Stock');
-    
-    // Find all stocks
-    const stocks = await Stock.find({});
-    
-    if (!stocks || stocks.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No stocks found in the database'
-      });
-    }
-    
-    // Send all stocks as response
-    res.json({
-      success: true,
-      data: stocks,
-      count: stocks.length
-    });
-    
-  } catch (error) {
-    console.error('Error fetching all stocks:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error while fetching all stocks'
-    });
-  }
+  try { const stocks = await marketData.listStocks(); res.json({success:true,data:stocks,count:stocks.length}); }
+  catch(error) { res.status(502).json({success:false,message:error.message}); }
+});
+app.get('/api/market', async (req,res) => {
+  try { res.json(await marketData.get('/api/market')); }
+  catch(error) { res.status(502).json({success:false,message:error.message}); }
 });
 app.use("/", authRoute);
 app.use("/users", require("./routes/UserRoute"));

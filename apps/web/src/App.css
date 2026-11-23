@@ -29,3 +29,7 @@ body {
     padding: 0 1rem;
   }
 }
+
+.charts-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.source-note {font-size:13px;color:#556274;margin:14px 0 20px;}
+@media(max-width:1000px){.charts-grid {grid-template-columns:1fr;}}

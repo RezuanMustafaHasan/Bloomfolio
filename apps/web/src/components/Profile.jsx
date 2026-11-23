@@ -172,6 +172,12 @@ export default function Profile() {
             </div>
           )}
         </div>
+        <section className="stock-table-container" data-testid="transaction-history">
+          <h2>Transaction History</h2><div className="table-responsive"><table className="table performance-table"><thead><tr><th>Date</th><th>Action</th><th>Stock</th><th>Quantity</th><th>Price</th><th>Value</th></tr></thead><tbody>
+            {(user?.transactionHistory || []).slice().reverse().map((trade,i)=><tr key={i}><td>{new Date(trade.timestamp).toLocaleString()}</td><td className={trade.action==='BUY'?'positive':'negative'}>{trade.action}</td><td>{trade.tradingCode}</td><td>{trade.quantity}</td><td>{formatNumber(trade.price)}</td><td>{formatNumber(trade.quantity*trade.price)}</td></tr>)}
+            {!user?.transactionHistory?.length && <tr><td colSpan={6}>No executed trades yet</td></tr>}
+          </tbody></table></div>
+        </section>
       </div>
     </div>
   );

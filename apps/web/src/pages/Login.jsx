@@ -15,7 +15,8 @@ function Login() {
     e.preventDefault();
     try {
       // Call backend to set auth cookie, then refresh local auth state
-      await loginApi({ email: value.email, password: value.password });
+      const result = await loginApi({ email: value.email, password: value.password });
+      if(!result.success) throw new Error(result.message);
       refreshAuth();
       navigate("/Dashboard");
     } catch (error) {

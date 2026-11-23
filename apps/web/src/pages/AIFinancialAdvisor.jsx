@@ -117,31 +117,9 @@ function AIFinancialAdvisor() {
 
     const tradingCodes = selectedStocks.map(s => s.tradingCode);
 
-    // Robust retry with exponential backoff for transient errors (overload/rate limit)
     setIsTyping(true);
-    const start = Date.now();
-    const maxWaitMs = 90000; // wait up to 90s for a reply
-    let attempts = 0;
-    let res;
-    let lastErr = '';
-
-    while (Date.now() - start < maxWaitMs) {
-      attempts += 1;
-      res = await aiAPI.chat({ tradingCodes, question: text, model: 'gemini-2.5-flash', sessionId: activeSessionId });
-
-      if (res?.success && res?.data?.answer) break;
-
-      // Decide if we should retry based on error message/status
-      const msg = res?.message || res?.error || '';
-      lastErr = msg || 'Unknown error';
-      const retriable = /overloaded|Rate limited|timeout|ECONNRESET|503|429|temporarily unavailable/i.test(lastErr);
-      if (!retriable) break;
-
-      // Exponential backoff with jitter
-      const delay = Math.min(8000, Math.round(500 * Math.pow(1.6, attempts)) + Math.floor(Math.random() * 400));
-      await new Promise(r => setTimeout(r, delay));
-    }
-
+    const res = await aiAPI.chat({tradingCodes, question:text, sessionId:activeSessionId});
+    const lastErr = res?.message || '';
     setIsTyping(false);
 
     if (res?.success && res?.data?.answer) {
@@ -182,7 +160,7 @@ function AIFinancialAdvisor() {
         <div className="advisor-body">
           {/* Left: history sidebar with context picker */}
           <aside className="history-sidebar" aria-label="Chat history and context">
-            <span className="heading">AI Financial Advisor</span>
+            <span className="heading" id="advisor-title">AI Financial Advisor</span>
             <button className="new-chat-btn" onClick={newChat} aria-label="Start new chat">+ New chat</button>
 
             {/* Context Builder moved here */}

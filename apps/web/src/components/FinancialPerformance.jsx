@@ -1,76 +1,14 @@
-import React from 'react';
 import './FinancialPerformance.css';
-
-const FinancialPerformance = ({ stockData }) => {
-  const { financialPerformance } = stockData;
-  const { interimEPS, periodEndMarketPrice } = financialPerformance || {};
-
-  return (
-    <div className="financial-performance">
-      <div className="card performance-card">
-        <div className="card-header">
-          <h5>Financial Performance</h5>
-        </div>
-        <div className="card-body">
-          <div className="row">
-            <div className="col-md-6">
-              <div className="performance-section">
-                <h6>Interim Earnings Per Share (EPS)</h6>
-                <div className="table-responsive">
-                  <table className="table performance-table">
-                    <thead>
-                      <tr>
-                        <th>Year</th>
-                        <th>Period</th>
-                        <th>Basic EPS</th>
-                        <th>Diluted EPS</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {interimEPS?.map((eps, index) => (
-                        <tr key={index}>
-                          <td>{eps.year}</td>
-                          <td>{eps.period}</td>
-                          <td className={eps.basic < 0 ? 'negative' : 'positive'}>
-                            {eps.basic?.toFixed(2) || 'N/A'}
-                          </td>
-                          <td>{eps.diluted?.toFixed(2) || 'N/A'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <div className="performance-section">
-                <h6>Period End Market Price</h6>
-                <div className="table-responsive">
-                  <table className="table performance-table">
-                    <thead>
-                      <tr>
-                        <th>Period</th>
-                        <th>Market Price</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {periodEndMarketPrice?.map((price, index) => (
-                        <tr key={index}>
-                          <td>{price.period}</td>
-                          <td>৳{price.price?.toFixed(2) || 'N/A'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default FinancialPerformance;
+export default function FinancialPerformance({stockData}) {
+  const performance=stockData.financialPerformance || {};
+  const fmt=n=>n==null?'—':Number(n).toLocaleString(undefined,{maximumFractionDigits:2});
+  return <section className="financial-performance" data-testid="financial-performance"><div className="card performance-card">
+    <div className="card-header"><h5>Financial Performance</h5></div><div className="card-body">
+      <h6>Annual earnings and valuation</h6><div className="table-responsive"><table className="table performance-table"><thead><tr><th>Year</th><th>EPS (৳)</th><th>NAV/share (৳)</th><th>Profit (mn ৳)</th><th>Year-end P/E</th><th>Dividend %</th></tr></thead><tbody>
+        {(performance.yearly || []).map(r=><tr key={r.year}><td>{r.year}</td><td>{fmt(r.eps)}</td><td>{fmt(r.nav_per_share)}</td><td>{fmt(r.profit_mn)}</td><td>{fmt(r.pe_at_year_end)}</td><td>{fmt(r.dividend_percent)}</td></tr>)}
+      </tbody></table></div>
+      <h6>Interim earnings per share</h6><table className="table performance-table"><thead><tr><th>Year</th><th>Period</th><th>EPS (৳)</th></tr></thead><tbody>
+        {(performance.interimEPS || []).map((r,i)=><tr key={i}><td>{r.year}</td><td>{r.period}</td><td>{fmt(r.basic)}</td></tr>)}
+      </tbody></table>
+    </div></div></section>;
+}

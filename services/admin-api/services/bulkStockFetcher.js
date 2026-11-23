@@ -1,136 +1,46 @@
-const tradingCodes = require('../data/tradingCodes');
-const stockScraper = require('./stockScraper');
 const Stock = require('../models/Stock');
-
+const fs = require('node:fs');
+const path = require('node:path');
+const progressFile = path.join(__dirname, '../.cache/bulk-progress.json');
 class BulkStockFetcher {
   constructor() {
     this.isRunning = false;
-    this.progress = {
-      total: 0,
-      completed: 0,
-      failed: 0,
-      current: null,
-      startTime: null,
-      errors: []
-    };
-    this.batchSize = 5; // Process 5 stocks at a time to avoid overwhelming the server
-    this.delayBetweenBatches = 2000; // 2 seconds delay between batches
+    this.stopRequested = false;
+    this.progress = {total:0,completed:0,failed:0,current:null,startTime:null,errors:[]};
+    if(fs.existsSync(progressFile)) { try { this.progress = JSON.parse(fs.readFileSync(progressFile)); } catch {} }
   }
-
+  persist() { fs.mkdirSync(path.dirname(progressFile),{recursive:true});fs.writeFileSync(progressFile,JSON.stringify(this.progress)); }
   async fetchAllStocks() {
-    if (this.isRunning) {
-      throw new Error('Bulk fetch is already running');
-    }
-
-    this.isRunning = true;
-    this.progress = {
-      total: tradingCodes.length,
-      completed: 0,
-      failed: 0,
-      current: null,
-      startTime: new Date(),
-      errors: []
-    };
-
-    console.log(`Starting bulk fetch for ${tradingCodes.length} stocks...`);
-
+    if(this.isRunning) throw new Error('Bulk fetch is already running');
+    this.isRunning = true;this.stopRequested = false;
+    this.progress = {total:0,completed:0,failed:0,current:null,startTime:new Date(),errors:[],stopped:false};
     try {
-      // Process stocks in batches
-      for (let i = 0; i < tradingCodes.length; i += this.batchSize) {
-        const batch = tradingCodes.slice(i, i + this.batchSize);
-        await this.processBatch(batch);
-        
-        // Add delay between batches to be respectful to the server
-        if (i + this.batchSize < tradingCodes.length) {
-          await this.delay(this.delayBetweenBatches);
-        }
+      const response = await fetch((process.env.MARKET_DATA_URL || 'http://127.0.0.1:8000')+'/api/stocks',{signal:AbortSignal.timeout(90000)});
+      const body = await response.json();if(!response.ok || !body.data?.length) throw new Error(body.detail || 'No market snapshots returned');
+      this.progress.total = body.data.length;
+      for(const stock of body.data) {
+        if(this.stopRequested) {this.progress.stopped=true;break;}
+        this.progress.current = stock.tradingCode;
+        try {
+          const fields = {};
+          for(const [key,value] of Object.entries(stock)) {
+            if(['marketInformation','basicInformation'].includes(key)) for(const [k,v] of Object.entries(value)) fields[`${key}.${k}`]=v;
+            else fields[key]=value;
+          }
+          await Stock.collection.updateOne({tradingCode:stock.tradingCode},{$set:fields},{upsert:true});this.progress.completed++;
+        } catch(error) {this.progress.failed++;this.progress.errors.push({tradingCode:stock.tradingCode,error:error.message,timestamp:new Date()});}
+        // Yield between records so Stop can interrupt the job.
+        await new Promise(resolve=>setTimeout(resolve,10));
       }
-
-      console.log(`Bulk fetch completed. Success: ${this.progress.completed}, Failed: ${this.progress.failed}`);
-      return this.progress;
-    } catch (error) {
-      console.error('Bulk fetch error:', error);
-      throw error;
-    } finally {
-      this.isRunning = false;
-      this.progress.current = null;
-    }
+    } catch(error) {this.progress.errors.push({tradingCode:'Provider',error:error.message,timestamp:new Date()});throw error;}
+    finally {this.isRunning=false;this.progress.current=null;this.persist();}
+    return this.getProgress();
   }
-
-  async processBatch(batch) {
-    const promises = batch.map(tradingCode => this.fetchSingleStock(tradingCode));
-    await Promise.allSettled(promises);
-  }
-
-  async fetchSingleStock(tradingCode) {
-    this.progress.current = tradingCode;
-    
-    try {
-      console.log(`Fetching ${tradingCode}... (${this.progress.completed + 1}/${this.progress.total})`);
-      
-      const stockData = await stockScraper.fetchStockData(tradingCode);
-      
-      // Update or create stock in database (exact behavior from Stock-fetcher-mongo)
-      await Stock.findOneAndUpdate(
-        { tradingCode: tradingCode },
-        {
-          ...stockData,
-          lastUpdated: new Date()
-        },
-        { 
-          upsert: true, 
-          new: true,
-          runValidators: true
-        }
-      );
-
-      this.progress.completed++;
-      console.log(`✓ Successfully fetched ${tradingCode}`);
-      
-    } catch (error) {
-      this.progress.failed++;
-      const errorInfo = {
-        tradingCode,
-        error: error.message,
-        timestamp: new Date()
-      };
-      this.progress.errors.push(errorInfo);
-      console.error(`✗ Failed to fetch ${tradingCode}:`, error.message);
-    }
-  }
-
-  delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
   getProgress() {
-    return {
-      ...this.progress,
-      isRunning: this.isRunning,
-      percentage: this.progress.total > 0 ? Math.round((this.progress.completed + this.progress.failed) / this.progress.total * 100) : 0,
-      estimatedTimeRemaining: this.calculateEstimatedTime()
-    };
+    const done=this.progress.completed+this.progress.failed;
+    return {...this.progress,isRunning:this.isRunning,percentage:this.progress.total?Math.round(done/this.progress.total*100):0,
+      estimatedTimeRemaining:done?Math.round((Date.now()-new Date(this.progress.startTime))/done*(this.progress.total-done)/1000):null};
   }
-
-  calculateEstimatedTime() {
-    if (!this.progress.startTime || this.progress.completed === 0) {
-      return null;
-    }
-
-    const elapsed = Date.now() - this.progress.startTime.getTime();
-    const avgTimePerStock = elapsed / (this.progress.completed + this.progress.failed);
-    const remaining = this.progress.total - (this.progress.completed + this.progress.failed);
-    
-    return Math.round(remaining * avgTimePerStock / 1000); // in seconds
-  }
-
-  stop() {
-    if (this.isRunning) {
-      this.isRunning = false;
-      console.log('Bulk fetch stopped by user');
-    }
-  }
+  stop() {this.stopRequested=true;}
 }
-
-// Create singleton instance
 module.exports = new BulkStockFetcher();

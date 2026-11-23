@@ -5,9 +5,10 @@ const MoneyRequest = require('../models/MoneyRequest');
 router.post('/', requireUser, async (req, res) => {
   try {
     const { requestedAmount, transactionId } = req.body;
-    if (typeof requestedAmount !== 'number' || requestedAmount <= 0) {
+    if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) {
       return res.status(400).json({ success: false, message: 'Amount must be a positive number' });
     }
+    if(typeof transactionId!=='string'||!transactionId.trim()) return res.status(400).json({success:false,message:'Transaction ID is required'});
     const exists = await MoneyRequest.findOne({ transactionId });
     if (exists) return res.status(409).json({ success: false, message: 'Transaction ID already exists' });
 

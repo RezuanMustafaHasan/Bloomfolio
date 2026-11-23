@@ -46,7 +46,7 @@ const StockHeader = ({ stockData }) => {
             </div>
             <div className="market-status">
               <span className="status-indicator"></span>
-              <span className="status-text">Market Open</span>
+              <span className="status-text">Latest quote: {marketInformation.asOfDate?.slice(0,10)}</span>
             </div>
           </div>
         </div>

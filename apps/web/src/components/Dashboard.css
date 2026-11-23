@@ -152,3 +152,4 @@
   .gauge-title { font-size: 18px; }
   .gauge-subtitle { font-size: 14px; }
 }
+.dashboard-overview .semi-donut {max-height:230px;} .dashboard-overview .strength-card {padding:18px;} .dashboard-overview .kpi {padding:16px;} .dashboard-overview .kpi-value {font-size:28px;} .dashboard-overview .kpi-label {font-size:16px;}

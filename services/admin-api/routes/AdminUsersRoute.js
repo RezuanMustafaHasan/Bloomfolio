@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 
 // Reuse existing User model from main backend (sibling directory)
 const User = require('../models/User');
+const Stock = require('../models/Stock');
 
 // List users with optional search query
 router.get('/users', requireAdmin, async (req, res) => {
@@ -48,18 +49,21 @@ router.delete('/users/:id', requireAdmin, async (req, res) => {
 
 router.post('/assign-stock', requireAdmin, async (req, res) => {
   try {
-    const { email, tradingCode, quantity } = req.body;
-    if (!email || !tradingCode || typeof quantity !== 'number' || quantity <= 0) {
+    const { email, quantity } = req.body;
+    const tradingCode=String(req.body.tradingCode || '').toUpperCase();
+    if (!email || !tradingCode || !Number.isInteger(quantity) || quantity <= 0) {
       return res.status(400).json({ success: false, message: 'Provide email, tradingCode, and positive quantity' });
     }
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
+    const stock=await Stock.findOne({tradingCode});
+    if(!stock) return res.status(404).json({success:false,message:'Unknown stock. Sync market data first.'});
     const existing = user.portfolio.find(p => p.stock === tradingCode);
     if (existing) {
       existing.quantity += quantity;
     } else {
-      user.portfolio.push({ stock: tradingCode, quantity, buyPrice: 10, date: new Date() });
+      user.portfolio.push({ stock: tradingCode, quantity, buyPrice: stock.marketInformation.lastTradingPrice, date: new Date() });
     }
     await user.save();
     res.json({ success: true, message: 'Stock assigned successfully', data: { email, tradingCode, quantity } });

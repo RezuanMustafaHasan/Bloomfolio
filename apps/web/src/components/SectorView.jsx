@@ -33,6 +33,7 @@ const SectorView = () => {
     setError(null);
     try {
       const response = await stockAPI.getAllStocks();
+      if(!response.success) throw new Error(response.error);
       const stocksData = response.data || [];
       setStocks(stocksData);
       // initialize expanded sectors to show all by default if none persisted

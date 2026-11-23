@@ -2,6 +2,16 @@ const router = require('express').Router();
 const { requireUser } = require('../middleware/AuthMiddleware');
 const Order = require('../models/Order');
 const User = require('../models/User');
+const Stock = require('../models/Stock');
+async function capacity(userId, code, type, price, qty, exclude) {
+  if(!await Stock.exists({tradingCode:code})) return 'Unknown stock';
+  const user=await User.findById(userId);if(!user)return 'User not found';
+  const pending=await Order.find({userId,orderType:type,...(exclude?{_id:{$ne:exclude}}:{}),...(type==='SELL'?{tradingCode:code}:{})});
+  const reserved=pending.reduce((n,o)=>n+(type==='BUY'?o.quantity*o.askingPrice:o.quantity),0);
+  if(type==='BUY'&&user.purchasePower-reserved<price*qty)return 'Insufficient unreserved purchase power';
+  if(type==='SELL'&&(user.portfolio.find(p=>p.stock===code)?.quantity || 0)-reserved<qty)return 'Insufficient unreserved holdings';
+  return null;
+}
 
 // List orders for a trading code, optionally filtered by orderType
 // GET /api/orders?tradingCode=SIBL&orderType=BUY
@@ -41,6 +51,9 @@ router.post('/', requireUser, async (req, res) => {
 
     const code = String(tradingCode).toUpperCase();
     const type = String(orderType).toUpperCase();
+    if(!['BUY','SELL'].includes(type)) return res.status(400).json({success:false,message:'Invalid order type'});
+    const error=await capacity(req.userId,code,type,priceNum,qtyNum);
+    if(error)return res.status(400).json({success:false,message:error});
 
     // Compute serial for FIFO within tradingCode + type
     const serial = await Order.countDocuments({ tradingCode: code, orderType: type }) + 1;
@@ -99,6 +112,9 @@ router.post('/:id/resubmit', requireUser, async (req, res) => {
     if (!Number.isInteger(qtyNum) || qtyNum <= 0) {
       return res.status(400).json({ success: false, message: 'quantity must be a positive integer' });
     }
+
+    const error=await capacity(req.userId,code,type,priceNum,qtyNum,id);
+    if(error)return res.status(400).json({success:false,message:error});
 
     // Cancel the original order by deleting it to avoid matching engine consuming it
     try {

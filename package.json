@@ -17,7 +17,8 @@
     "check": "node scripts/check.mjs",
     "test:market-data": "services/market-data/.venv/bin/python -m unittest discover -s services/market-data/tests",
     "screenshots": "node scripts/screenshots.mjs",
-    "seed:demo": "node scripts/seed-demo.mjs"
+    "seed:demo": "node scripts/seed-demo.mjs",
+    "test:features": "node scripts/test-features.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1"

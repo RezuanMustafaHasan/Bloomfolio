@@ -12,7 +12,7 @@ const StockInfoCards = ({ stockData }) => {
   };
 
   const formatCurrency = (num) => {
-    return num ? ` ৳${formatNumber(num)}` : 'N/A';
+    return num != null ? ` ৳${formatNumber(num)}` : 'N/A';
   };
 
   const latestShareholding = shareholding?.[shareholding.length - 1] || {};
@@ -80,8 +80,8 @@ const StockInfoCards = ({ stockData }) => {
                 <span className="value"> ৳{basicInformation?.faceValue || 'N/A'}</span>
               </div>
               <div className="info-item">
-                <span className="label">Market Lot:</span>
-                <span className="value">{basicInformation?.marketLot || 'N/A'}</span>
+                <span className="label">Price / Earnings:</span>
+                <span className="value">{stockData.fundamentals?.pe ?? 'N/A'}</span>
               </div>
               <div className="info-item">
                 <span className="label">Listing Year:</span>
@@ -111,8 +111,8 @@ const StockInfoCards = ({ stockData }) => {
             </div>
             <div className="card-body">
               <div className="info-item">
-                <span className="label">Authorized Capital:</span>
-                <span className="value">{formatCurrency(basicInformation?.authorizedCapital)}</span>
+                <span className="label">Reported EPS:</span>
+                <span className="value">{stockData.fundamentals?.eps ?? 'N/A'}</span>
               </div>
               <div className="info-item">
                 <span className="label">Paid Up Capital:</span>
@@ -144,7 +144,7 @@ const StockInfoCards = ({ stockData }) => {
                   year: 'numeric', 
                   month: 'short', 
                   day: 'numeric' 
-                }) : 'Jun 30, 2025'}
+                }) : 'Not supplied'}
               </small>
             </div>
             <div className="card-body">

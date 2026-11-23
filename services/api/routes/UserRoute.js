@@ -7,6 +7,7 @@ const { requireUser } = require('../middleware/AuthMiddleware');
 router.get('/:id', requireUser, async (req, res) => {
   try {
     const { id } = req.params;
+    if(String(req.userId)!==String(id)) return res.status(403).json({message:'Forbidden'});
     const user = await User.findById(id).select('-password -__v');
     if (!user) return res.status(404).json({ message: 'User not found' });
     return res.json(user);

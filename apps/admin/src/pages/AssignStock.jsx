@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { assignStock } from '../services/adminUsers';
 
 const AssignStock = () => {
-  const [form, setForm] = useState({ email: '', tradingCode: '', quantity: 0 });
+  const [form, setForm] = useState({ email: '', tradingCode: '', quantity: 1 });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -19,7 +19,7 @@ const AssignStock = () => {
       const res = await assignStock({ email: form.email.trim(), tradingCode: form.tradingCode.trim(), quantity: quantityNum });
       if (res?.success) {
         setMessage('Stock assigned successfully.');
-        setForm({ email: '', tradingCode: '', quantity: 0 });
+        setForm({ email: '', tradingCode: '', quantity: 1 });
       } else {
         setError(res?.message || 'Failed to assign stock');
       }
@@ -52,7 +52,7 @@ const AssignStock = () => {
           {loading ? 'Assigning...' : 'Assign Stock'}
         </button>
       </form>
-      <p className="mt-3 text-muted">Note: This does not affect purchase power or perform conditional checks.</p>
+      <p className="mt-3 text-muted">Adds virtual holdings at the latest stored market price. Purchase power is unchanged.</p>
     </div>
   );
 };
