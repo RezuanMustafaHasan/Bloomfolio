@@ -1,0 +1,25 @@
+{
+  "name": "bloomfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DSE market research and simulated stock trading with user and admin portals",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:admin": "npm --prefix apps/admin run dev",
+    "dev:api": "npm --prefix services/api run dev",
+    "dev:admin-api": "npm --prefix services/admin-api run dev",
+    "build": "npm --prefix apps/web run build && npm --prefix apps/admin run build",
+    "check": "node scripts/check.mjs",
+    "test:market-data": "services/market-data/.venv/bin/python -m unittest discover -s services/market-data/tests",
+    "screenshots": "node scripts/screenshots.mjs",
+    "seed:demo": "node scripts/seed-demo.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
+}

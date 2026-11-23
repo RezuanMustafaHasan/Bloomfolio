@@ -42,3 +42,10 @@ venv/
 # IDE/editor
 .vscode/
 .idea/
+
+# Local Python environments and runtime files
+.venv/
+.runtime/
+playwright-report/
+test-results/
+!**/.env.example
