@@ -96,11 +96,13 @@ const AdminRequests = () => {
               <td>{r.createdAt}</td>
               <td>
                 <div className="btn-group" role="group" aria-label="Actions">
+                  {r.status === 'Pending' && <>
                   <button className="btn btn-sm btn-primary" onClick={() => doAccept(r.id)}>Accept</button>
                   <button className="btn btn-sm btn-danger" onClick={() => doReject(r.id)}>Reject</button>
                   {editing[r.id] === undefined && (
                     <button className="btn btn-sm btn-warning" onClick={() => startEdit(r.id, r.amount)}>Modify</button>
                   )}
+                  </>}
                   <button className="btn btn-sm btn-outline-secondary" onClick={() => onDelete(r.id)}>Delete</button>
                 </div>
               </td>

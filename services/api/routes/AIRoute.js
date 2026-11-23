@@ -1,241 +1,46 @@
-const router = require('express').Router();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const Stock = require('../models/Stock');
-const ChatSession = require('../models/ChatSession');
-const { requireUser } = require('../middleware/AuthMiddleware');
-
-// Utility: build short title from first query
-function makeTitle(text) {
-  const clean = String(text || '').replace(/\s+/g, ' ').trim();
-  if (clean.length <= 60) return clean || 'New chat';
-  // Trim at word boundary to ~60 chars
-  let t = clean.slice(0, 60);
-  const lastSpace = t.lastIndexOf(' ');
-  if (lastSpace > 20) t = t.slice(0, lastSpace);
-  return `${t}...`;
-}
-
-// List my chat sessions
-router.get('/sessions', requireUser, async (req, res) => {
-  try {
-    const sessions = await ChatSession.find({ userId: req.userId })
-      .sort({ updatedAt: -1 })
-      .select('_id title tradingCodes updatedAt');
-    res.json({ success: true, data: sessions });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to load sessions', error: err.message });
-  }
+const router=require('express').Router();
+const Stock=require('../models/Stock');
+const ChatSession=require('../models/ChatSession');
+const {requireUser}=require('../middleware/AuthMiddleware');
+router.use(requireUser);
+router.get('/sessions',async(req,res)=>{
+  try {const data=await ChatSession.find({userId:req.userId}).sort({updatedAt:-1}).select('_id title tradingCodes updatedAt');res.json({success:true,data});}
+  catch {res.status(500).json({success:false,message:'Could not load conversations'});}
 });
-
-// Get one session with messages
-router.get('/session/:id', requireUser, async (req, res) => {
-  try {
-    const s = await ChatSession.findOne({ _id: req.params.id, userId: req.userId });
-    if (!s) return res.status(404).json({ success: false, message: 'Session not found' });
-    res.json({ success: true, data: { _id: s._id, title: s.title, tradingCodes: s.tradingCodes, messages: s.messages } });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to load session', error: err.message });
-  }
+router.get('/session/:id',async(req,res)=>{
+  try {const data=await ChatSession.findOne({_id:req.params.id,userId:req.userId});if(!data)return res.status(404).json({success:false,message:'Conversation not found'});res.json({success:true,data});}
+  catch {res.status(400).json({success:false,message:'Invalid conversation'});}
 });
-
-// POST /api/ai/chat
-// body: { tradingCodes: string[], question: string, model?: string, sessionId?: string }
-router.post('/chat', requireUser, async (req, res) => {
+router.post('/chat',async(req,res)=>{
   try {
-    const { tradingCodes, question, model, sessionId } = req.body || {};
-    if (typeof question !== 'string' || !question.trim()) {
-      return res.status(400).json({ success: false, message: 'question must be a non-empty string' });
-    }
-
-    // Normalize codes and fetch stocks (allow empty for general questions)
-    const codes = Array.isArray(tradingCodes)
-      ? tradingCodes.map(c => String(c).toUpperCase().trim()).filter(Boolean)
-      : [];
-    const stocks = codes.length > 0
-      ? await Stock.find({ tradingCode: { $in: codes } })
-      : [];
-
-    // Map results by code for quick lookup
-    const byCode = Object.fromEntries(stocks.map(s => [String(s.tradingCode).toUpperCase(), s]));
-
-    // Build context array with placeholders for missing ones (when codes provided)
-    const context = codes.map(code => {
-      const doc = byCode[code];
-      if (!doc) {
-        return { tradingCode: code, missing: true };
-      }
-      const plain = JSON.parse(JSON.stringify(doc));
-      if (Array.isArray(plain.financialPerformance?.interimEPS)) {
-        plain.financialPerformance.interimEPS = plain.financialPerformance.interimEPS.slice(-6);
-      }
-      if (Array.isArray(plain.shareholding)) {
-        plain.shareholding = plain.shareholding.slice(-3);
-      }
-      return plain;
-    });
-
-    // Initialize Gemini client
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ success: false, message: 'GEMINI_API_KEY is not configured' });
-    }
-    const apiVersion = process.env.GEMINI_API_VERSION || 'v1beta';
-    const modelName = typeof model === 'string' && model.trim() ? model.trim() : (process.env.GEMINI_MODEL || 'gemini-2.5-flash');
-
-    // Compose prompt: non-technical, supports general questions without stock selection
-    const baseInstruction = [
-      'You are a helpful financial advisor focused on the Dhaka Stock Exchange and general investing.',
-      'Speak to a non-technical user in plain language.',
-      'Do not mention internal data formats (like JSON) or data types.',
-      'If specific stock details are unavailable, acknowledge briefly and provide general guidance.',
-      'Give concise, practical advice and explanations with examples where useful.'
-    ].join(' ');
-
-    let textPrompt;
-    if (codes.length > 0) {
-      const instruction = baseInstruction + '\nUse the following stock information as internal context. If any field is absent, treat it as not provided and continue.';
-      textPrompt = [
-        'Stock context (for internal use):',
-        JSON.stringify(context, null, 2),
-        instruction,
-        `User question: ${question}`,
-      ].join('\n\n');
+    const {question,sessionId}=req.body;
+    if(typeof question!=='string'||!question.trim()||question.length>4000)return res.status(400).json({success:false,message:'Enter a question of 1–4000 characters'});
+    const codes=[...new Set((req.body.tradingCodes || []).map(c=>String(c).toUpperCase()))].slice(0,5);
+    const stocks=await Stock.find({tradingCode:{$in:codes}}).lean();
+    const context=stocks.map(s=>({symbol:s.tradingCode,name:s.companyName,sector:s.sector,currency:'BDT',quoteDate:s.marketInformation.asOfDate,lastPriceBDT:s.marketInformation.lastTradingPrice,changePercent:s.marketInformation.changePercentage,marketCapBDT:s.marketInformation.marketCapitalization,epsBDT:s.fundamentals?.eps,pe:s.fundamentals?.pe,source:s.dataSource?.name}));
+    let session=sessionId?await ChatSession.findOne({_id:sessionId,userId:req.userId}):null;
+    if(sessionId&&!session)return res.status(404).json({success:false,message:'Conversation not found'});
+    const instruction='You explain DSE company data for an educational trading simulator. Be concise and factual. Use only the supplied figures for company-specific claims, mention the quote date, and say when information is missing. Do not invent figures or give personalized buy/sell instructions. All prices are Bangladeshi taka: use BDT or ৳, never dollars or $. Report only the requested supplied facts. Do not speculate about valuation or claim a provided field is missing. Use at most 100 words.';
+    const prompt=instruction+'\nCompany data: '+JSON.stringify(context)+'\nRecent conversation: '+JSON.stringify(session?.messages.slice(-6)||[])+'\nQuestion: '+question.trim();
+    let answer,usedModel;
+    const provider=process.env.AI_PROVIDER || (process.env.GEMINI_API_KEY?'gemini':'ollama');
+    if(provider==='ollama') {
+      usedModel=process.env.OLLAMA_MODEL || 'qwen3:0.6b';
+      const response=await fetch((process.env.OLLAMA_URL || 'http://127.0.0.1:11434')+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:usedModel,messages:[{role:'user',content:prompt}],stream:false,think:false,options:{temperature:0.2,num_predict:350}}),signal:AbortSignal.timeout(60000)});
+      const body=await response.json();if(!response.ok)throw new Error('Local AI model is unavailable. Check Ollama and the configured model.');
+      answer=body.message?.content?.trim();
     } else {
-      textPrompt = [
-        baseInstruction,
-        `User question: ${question}`,
-      ].join('\n\n');
+      if(!process.env.GEMINI_API_KEY)throw new Error('Configure GEMINI_API_KEY or choose AI_PROVIDER=ollama.');
+      usedModel=process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+      const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${usedModel}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':process.env.GEMINI_API_KEY},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:700}}),signal:AbortSignal.timeout(45000)});
+      const body=await response.json();if(!response.ok)throw new Error(`Gemini could not respond (HTTP ${response.status}). Check the configured key/model or use local Ollama.`);
+      answer=body.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('\n').trim();
     }
-
-    // Call Gemini REST API with retry and fallback
-    async function callGemini(mn, prompt) {
-      console.log("Prompt to Gemini:", prompt);
-      const endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/${mn}:generateContent?key=${apiKey}`;
-      const payload = {
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }],
-          },
-        ],
-      };
-      const r = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!r.ok) {
-        const errText = await r.text();
-        const e = new Error(`Gemini HTTP ${r.status}: ${errText}`);
-        e.status = r.status;
-        e.errText = errText;
-        throw e;
-      }
-      return r.json();
-    }
-
-    // Persistent retry until a reply (bounded by max wait)
-    let usedModel = modelName;
-    let data;
-    const startTs = Date.now();
-    const maxWaitMs = Number(process.env.AI_MAX_WAIT_MS || 240000); // 4 minutes
-    const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-1.5-flash';
-    const modelChain = [modelName, fallbackModel];
-    let attempt = 0;
-    let lastErrMsg = '';
-
-    while ((Date.now() - startTs) < maxWaitMs) {
-      const currentModel = modelChain[attempt % modelChain.length];
-      usedModel = currentModel;
-      try {
-        data = await callGemini(currentModel, textPrompt);
-        break; // got a response, proceed to parse
-      } catch (e) {
-        lastErrMsg = e.errText || e.message || String(e);
-        const isOverload = (e.status === 503) || /UNAVAILABLE|overloaded/i.test(lastErrMsg);
-        const isRateLimit = (e.status === 429) || /RESOURCE_EXHAUSTED|rate/i.test(lastErrMsg);
-        const isTimeout = /timeout|ETIMEDOUT/i.test(lastErrMsg);
-        const retriable = isOverload || isRateLimit || isTimeout || (e.status >= 500);
-        if (!retriable) {
-          throw e;
-        }
-        attempt += 1;
-        const delay = Math.min(10000, Math.round(500 * Math.pow(1.7, attempt))) + Math.floor(Math.random() * 500);
-        await new Promise(r => setTimeout(r, delay));
-        continue; // try next attempt
-      }
-    }
-
-    if (!data) {
-      const fallbackMsg = lastErrMsg || 'Model overloaded. Please retry shortly.';
-      return res.status(200).json({ success: false, message: fallbackMsg, error: lastErrMsg });
-    }
-
-    const answer = (data?.candidates?.[0]?.content?.parts || [])
-      .map(p => p.text || '')
-      .join('\n')
-      .trim();
-
-    if (!answer) {
-
-      // If no answer, keep polling within remaining time
-      let innerAttempts = 0;
-      while ((Date.now() - startTs) < maxWaitMs) {
-        innerAttempts += 1;
-        try {
-          const m = modelChain[innerAttempts % modelChain.length];
-          usedModel = m;
-          const d = await callGemini(m, textPrompt);
-          const a = (d?.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('\n').trim();
-          if (a) {
-            return res.json({ success: true, data: { answer: a, model: usedModel, codes, missing: codes.filter(c => !byCode[c]), sessionId: undefined } });
-          }
-        } catch (e) {
-          const msg = e.errText || e.message || '';
-          const retriable = /UNAVAILABLE|overloaded|RESOURCE_EXHAUSTED|rate|timeout|503|429/i.test(msg);
-          if (!retriable) break;
-        }
-        const delay = Math.min(8000, Math.round(400 * Math.pow(1.6, innerAttempts))) + Math.floor(Math.random() * 400);
-        await new Promise(r => setTimeout(r, delay));
-      }
-      return res.status(200).json({ success: false, message: 'No answer returned from Gemini. Try rephrasing or asking a smaller question.' });
-    }
-
-    // Persist chat session
-    let session;
-    if (sessionId) {
-      session = await ChatSession.findOne({ _id: sessionId, userId: req.userId });
-    }
-    if (!session) {
-      session = new ChatSession({
-        userId: req.userId,
-        title: makeTitle(question),
-        tradingCodes: codes,
-        messages: [
-          { from: 'user', text: question },
-          { from: 'ai', text: answer },
-        ],
-      });
-    } else {
-      const merged = Array.from(new Set([...(session.tradingCodes || []), ...codes]));
-      session.tradingCodes = merged;
-      session.messages.push({ from: 'user', text: question });
-      session.messages.push({ from: 'ai', text: answer });
-    }
-    await session.save();
-
-    return res.json({ success: true, data: { answer, model: usedModel, codes, missing: codes.filter(c => !byCode[c]), sessionId: String(session._id) } });
-  } catch (err) {
-    console.error('AI chat error:', err);
-    const msg = String(err?.message || '');
-    if (/503|UNAVAILABLE|overloaded/i.test(msg)) {
-      return res.status(200).json({ success: false, message: 'The model is overloaded. Please retry in a few seconds.', error: err.message });
-    }
-    if (/429|RESOURCE_EXHAUSTED|rate/i.test(msg)) {
-      return res.status(200).json({ success: false, message: 'Rate limited. Please slow down and retry.', error: err.message });
-    }
-    return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
-  }
+    if(!answer)throw new Error('The model returned an empty answer. Retry with a shorter question.');
+    if(!session)session=new ChatSession({userId:req.userId,title:question.trim().slice(0,60),tradingCodes:codes,messages:[]});
+    session.tradingCodes=[...new Set([...session.tradingCodes,...codes])];
+    session.messages.push({from:'user',text:question.trim()},{from:'ai',text:answer});await session.save();
+    res.json({success:true,data:{answer,model:usedModel,provider,sessionId:String(session._id),codes}});
+  } catch(error) {res.status(503).json({success:false,message:error.name==='TimeoutError'?'The AI request timed out. Please retry.':error.message});}
 });
-
-module.exports = router;
+module.exports=router;

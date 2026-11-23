@@ -78,3 +78,4 @@
     height: 250px;
   }
 }
+.chart-header {flex-wrap:wrap;gap:12px;} .chart-container {height:320px;} .chart-provenance {font-size:11px;color:#64748b;margin:10px 0;} .chart-period-buttons {gap:4px;} .period-btn {padding:6px 10px;}

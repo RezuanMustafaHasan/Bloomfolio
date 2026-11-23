@@ -15,10 +15,11 @@ export default function CandlestickChart({ apiBase = MARKET_DATA_BASE }) {
   const { tradingCode: routeCode } = useParams();
   const symbol = (routeCode || 'CITYBANK').toUpperCase();
 
-  const [months, setMonths] = useState(24);
+  const [months, setMonths] = useState(6);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [source, setSource] = useState(null);
 
   const containerRef = useRef(null);
   const chartRef = useRef(null);
@@ -27,12 +28,15 @@ export default function CandlestickChart({ apiBase = MARKET_DATA_BASE }) {
 
   // Fetch historical OHLC data
   useEffect(() => {
+    let active = true;
+    setRows([]);
     setLoading(true);
     fetch(`${apiBase}/api/history?symbol=${symbol}&months=${months}`)
       .then(async r => { const body = await r.json(); if (!r.ok) throw new Error(body.detail || `HTTP ${r.status}`); return body; })
-      .then(json => { setRows(json.data || []); setErr(''); })
-      .catch(e => setErr(e.message || 'Failed to load history'))
-      .finally(() => setLoading(false));
+      .then(json => { if(active) {setRows(json.data || []); setSource(json.source); setErr('');} })
+      .catch(e => {if(active) setErr(e.message || 'Failed to load history');})
+      .finally(() => {if(active) setLoading(false);});
+    return () => {active=false;};
   }, [apiBase, symbol, months]);
 
   // Initialize chart once
@@ -92,7 +96,7 @@ export default function CandlestickChart({ apiBase = MARKET_DATA_BASE }) {
   ), [months]);
 
   return (
-    <div className="stock-chart-card card">
+    <div className="stock-chart-card card" data-testid="candlestick-chart" data-bars={rows.length}>
       <div className="card-header chart-header d-flex justify-content-between align-items-center">
         <h5 className="m-0">Candlestick — {symbol}</h5>
         {RangeButtons}
@@ -102,7 +106,8 @@ export default function CandlestickChart({ apiBase = MARKET_DATA_BASE }) {
           <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
         </div>
         {loading && <div className="text-muted">Loading chart…</div>}
-        {err && <div className="text-danger">{err}</div>}
+        {err && <div className="text-danger" role="alert">{err}</div>}
+        {rows.length>0 && <div className="chart-provenance">{rows.length} daily bars · {rows[0].date} to {rows.at(-1).date} · {source?.stale ? 'Saved' : 'Source'}: {source?.name}</div>}
       </div>
     </div>
   );

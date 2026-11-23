@@ -40,12 +40,12 @@ function App() {
     <div className="App">
         <div className="container main-content">
           <StockHeader stockData={stockData}/>
-          <StockChart />
+          <p className="source-note">Quotes dated {stockData.marketInformation.asOfDate?.slice(0,10)} · {stockData.dataSource?.stale ? 'Saved source data' : 'Latest available source data'} · <a href="https://www.stockchartbd.com/developers.php" target="_blank" rel="noreferrer">DSE Intelligence</a> / dsebd.org</p>
+          <div className="charts-grid"><StockChart stockData={stockData} /><CandlestickChart /></div>
           <StockInfoCards stockData={stockData}/>
           <CorporateActions stockData={stockData}/>
           <FinancialPerformance stockData={stockData}/>
-          {/* Candlestick chart right after financial performance */}
-          <CandlestickChart />
+
         </div>
       </div>
   );

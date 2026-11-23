@@ -64,6 +64,7 @@ const CorporateActions = ({ stockData }) => {
                       </tr>
                     </thead>
                     <tbody>
+                      {(!bonusIssues?.length) && <tr><td colSpan={2} className="text-muted">No bonus-issue records supplied</td></tr>}
                       {bonusIssues?.slice(0, 5).map((bonus, index) => (
                         <tr key={index}>
                           <td>{bonus.year}</td>
@@ -103,7 +104,7 @@ const CorporateActions = ({ stockData }) => {
                       {(!rightIssues || rightIssues.length === 0) && (
                         <tr>
                           <td colSpan="2" className="text-center text-muted">
-                            No rights issues
+                            No rights-issue records supplied
                           </td>
                         </tr>
                       )}

@@ -2,12 +2,13 @@ import { API_BASE } from '../services/config';
 import React, { useEffect, useMemo, useState } from 'react';
 import './TradeModal.css';
 import { useAuth } from '../context/AuthContext.jsx';
-import { listOrders, placeOrder, executeOrder, myOrders, deleteOrder } from '../services/orders.js';
+import { listOrders, placeOrder, executeOrder, myOrders, deleteOrder, resubmitOrder } from '../services/orders.js';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }) => {
   const [page, setPage] = useState(true);
+  const [editing, setEditing] = useState(null);
   const [myOrdersList, setMyOrdersList] = useState([]);
   const [loadingMyOrders, setLoadingMyOrders] = useState(false);
   const [myOrdersError, setMyOrdersError] = useState('');
@@ -31,6 +32,7 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
 
   useEffect(() => {
     if (!isOpen) return;
+    setPage(true);
     setAskingPrice(currentPrice ?? '');
     setQuantity('');
     setPlaceError('');
@@ -155,7 +157,7 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
         setPlaceError(res?.message || 'Failed to place order');
       }
     } catch (err) {
-      setPlaceError('Failed to place order');
+      setPlaceError(err.response?.data?.message || 'Failed to place order');
     } finally {
       setPlacing(false);
     }
@@ -170,6 +172,13 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
     } catch (err) {
       setMyOrdersError('Failed to delete order');
     }
+  };
+  const saveEdit = async () => {
+    try {
+      await resubmitOrder(editing._id,{askingPrice:Number(editing.askingPrice),quantity:Number(editing.quantity)});
+      setEditing(null);
+      const result=await myOrders();setMyOrdersList(result.data || []);
+    } catch(error) {setMyOrdersError(error.response?.data?.message || 'Unable to resubmit order');}
   };
   if (!isOpen) return null;
 
@@ -373,10 +382,11 @@ const TradeModal = ({ isOpen, onClose, mode = 'BUY', tradingCode, currentPrice }
                           myOrdersList.slice(0, 50).map((o) => (
                             <tr key={o._id}>
                               <td>{o.orderType}</td>
-                              <td>{Number(o.askingPrice).toFixed(2)}</td>
-                              <td>{o.quantity}</td>
+                              <td>{editing?._id===o._id?<input aria-label="Edit asking price" type="number" min="0.01" step="0.01" value={editing.askingPrice} onChange={e=>setEditing({...editing,askingPrice:e.target.value})}/>:Number(o.askingPrice).toFixed(2)}</td>
+                              <td>{editing?._id===o._id?<input aria-label="Edit quantity" type="number" min="1" value={editing.quantity} onChange={e=>setEditing({...editing,quantity:e.target.value})}/>:o.quantity}</td>
                               <td>{o.status || 'PENDING'}</td>
                               <td>
+                                {editing?._id===o._id?<button type="button" className="btn btn-sm btn-success me-2" onClick={saveEdit}>Resubmit</button>:<button type="button" className="btn btn-sm btn-outline-primary me-2" onClick={()=>setEditing(o)}>Edit</button>}
                                 <button
                                   type="button"
                                   className="btn btn-sm btn-danger"

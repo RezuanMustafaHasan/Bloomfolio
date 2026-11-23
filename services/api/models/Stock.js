@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
 const stockSchema = new mongoose.Schema({
+  dataSource: mongoose.Schema.Types.Mixed,
+  fundamentals: mongoose.Schema.Types.Mixed,
   companyName: {
     type: String,
     required: true
@@ -127,6 +129,7 @@ const stockSchema = new mongoose.Schema({
     }
   },
   financialPerformance: {
+    yearly: [mongoose.Schema.Types.Mixed],
     interimEPS: [{
       year: {
         type: Number,

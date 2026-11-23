@@ -1,241 +1,208 @@
 # Bloomfolio
 
-A full-stack Dhaka Stock Exchange (DSE) research and **simulated stock trading** application. Browse company snapshots, compare sectors, inspect price history, manage a virtual portfolio, submit orders and funding requests, and administer the platform from a separate portal.
+DSE market research and simulated stock trading, with investor and admin portals. Built with React, Express, MongoDB, and a FastAPI market-data service.
 
-Built with React, Vite, Express, MongoDB, and FastAPI. Trades and balances are recorded inside Bloomfolio; there is no brokerage connection, exchange order routing, or real payment processing.
+![GP price history and candlestick charts with real daily market data](docs/screenshots/stock-details.png)
 
-![Bloomfolio dashboard with a sample stock snapshot](docs/screenshots/dashboard.png)
+## Working features
 
-## Features
-
-| Area | What it does |
+| Feature | Functionality |
 | --- | --- |
-| Market dashboard | Search, sort, and paginate stored stocks; view aggregate trade count, value, volume, and gainers/losers/unchanged counts. |
-| Company research | View market prices and ranges, company fundamentals, ownership, corporate actions, EPS, and financial highlights where source data is available. |
-| Historical charts | Line and candlestick charts with 6M, 1Y, 2Y, and 5Y ranges, served by the FastAPI history endpoint. |
-| Sector browser | Expand sectors, search companies, and compare stored stock metrics. |
-| Account and portfolio | Sign up/log in, inspect purchase power, holdings, valuation, profit/loss, pending orders, and transaction history. |
-| Simulated order book | Submit BUY/SELL orders, inspect the book, resubmit/cancel owned orders, and request matching against opposite orders at the same price. |
-| Funding requests | Submit an amount and transaction reference; track request status. Admin approval adjusts virtual purchase power. |
-| AI financial advisor | Select companies, ask Gemini questions using stored company context, and revisit saved chat sessions. Requires a Gemini API key. |
-| Admin portal | Log in separately, search/manage users, assign holdings, review funding requests, and run/monitor a bulk company-data scrape. |
+| Market dashboard | 400+ source-backed company quotes; search, sorting, pagination, trade/volume/value totals, and market breadth. |
+| Stock research | Current available price, daily/52-week ranges, company facts, valuation, earnings, ownership charts, and dividend records. |
+| Price charts | Visible line and candlestick charts, with 6M/1Y/2Y/5Y controls, crosshair, date/price axes, and actual coverage dates. |
+| Sector browser | Expand sectors and compare/filter their stocks. |
+| Investor account | Signup/login, virtual purchase power, holdings, cost/valuation, gain/loss, and executed transaction history. |
+| Virtual trading | BUY/SELL order book, exact-price matching across different users, partial fills, balance/holding checks, pending orders, editing/resubmission, and cancellation. |
+| Funding requests | Submit virtual-funding references; admins approve, reject, or modify the amount. A settled request cannot be credited again. |
+| AI advisor | Select companies, ask questions grounded in their stored quotes, receive a generated reply, and reopen saved conversations. Supports local Ollama or Gemini. |
+| Admin | Dashboard, user search, holding assignment at the stored market price, request review, and bulk quote synchronization with progress and working Stop control. |
 
-## Data sources and freshness
+**Trades, holdings, and funding are virtual.** This project does not route orders to DSE or process payments.
 
-Bloomfolio has **two different market-data paths**:
+## Market data
 
-1. **Company snapshots:** the admin Express service scrapes DSE company pages and writes documents to MongoDB. The user API reads those stored documents. Starting the app does not automatically refresh the database. The price panel polls the stored snapshot every 30 seconds; that polling is not an exchange live feed.
-2. **Daily chart history:** the FastAPI service requests DSE's day-end archive on demand and returns daily OHLCV rows. These are daily bars, not intraday ticks.
+FastAPI now connects to the public **[DSE Intelligence / StockChartBD data service](https://www.stockchartbd.com/developers.php)**, which republishes data sourced from **[dsebd.org](https://www.dsebd.org/)**. The original DSE scraping URLs no longer worked from this environment; the investor and admin APIs now share the working FastAPI adapter.
 
-The dashboard's “DSEX Strength” gauge summarizes the loaded stocks; it does not calculate the official DSEX index.
+- The dashboard loads company quotes and fundamentals automatically, including on a fresh database. Admin synchronization persists all available snapshots to MongoDB.
+- Company research adds source-backed company facts, ownership, annual/interim earnings, and dividends on demand.
+- Charts use actual daily OHLCV records. No chart prices are generated, interpolated, or supplied by screenshot mocks.
+- Quote dates and chart coverage are visible. These are the latest available source records, not a licensed exchange tick feed. A 5Y selection shows all records available within that period; the provider currently has about two years of history.
+- Successful responses are cached on disk. Quotes refresh after 5 minutes, history after 1 hour, financials after 6 hours, and company facts after 24 hours. Source failures reuse successful saved responses with a **saved/stale** indicator.
+- The adapter limits itself to 100 outgoing requests per hour, below the publisher's documented 120/hour allowance. Repeated chart requests share cached data.
+- Missing source fields remain unavailable; a missing company never displays another company's sample.
 
-**Verified on 23 November 2026:** the apps and APIs run locally. DSE requests returned HTTP 403/410 from this environment, so fresh company scraping and historical bars could not be verified end to end. Charts display the upstream-unavailable message when DSE cannot be reached. Screenshots below use the bundled October 2025 SIBL sample and fictional local accounts; they do not show current market quotes or a generated AI answer.
+Verified on **23 November 2026**: 412 company quotes, real GP history in all four range selections, ownership/dividend/financial records, functional virtual-trading and admin workflows, and a generated local-model advisor response. The screenshots use real market records plus fictional demo accounts and virtual balances.
 
-## Repository layout
+## Repository
 
 ```text
-Bloomfolio/
-├── apps/
-│   ├── web/                 # React investor portal (5173)
-│   └── admin/               # React admin portal (5174)
-├── services/
-│   ├── api/                 # Express user, portfolio, order, funding, AI API (8080)
-│   ├── admin-api/           # Express admin API and DSE company scraper (8081)
-│   └── market-data/         # FastAPI daily OHLCV history API (8000)
-│       └── tests/           # Parser and upstream-error tests
-├── scripts/                 # Setup, process runner, demo seed, checks, screenshots
-├── docs/
-│   ├── architecture.md      # Data flow, service responsibilities, migration map
-│   └── screenshots/         # Captures of the actual local application
-└── .github/workflows/       # Frontend builds and market-data tests
+apps/web/                    Investor React portal (5173)
+apps/admin/                  Admin React portal (5174)
+services/api/                User, portfolio, trading, funding, AI API (8080)
+services/admin-api/          Admin API and quote synchronization (8081)
+services/market-data/        FastAPI provider adapter, cache, history (8000)
+scripts/                     Setup, runner, fixture seed, checks and captures
+docs/screenshots/            Verified feature screenshots
+.github/workflows/           Frontend build and market-data unit tests
 ```
 
-The former `user/frontend`, `user/backend`, `admin/admin-frontend`, and `admin/admin-backend` folders have moved to the locations above. The previously external FastAPI chart service is now included in this repository. Each Node app/service retains its own lockfile.
+See [architecture and data flow](docs/architecture.md).
 
-## Run locally
+## Setup and run
 
-### Requirements
-
-- Node.js **22.12+** and npm (`.nvmrc` selects Node 22).
-- Python **3.10+** with `venv` and pip; verified with Python 3.14 locally.
-- MongoDB running locally, or a MongoDB URI you control.
-- Internet access for dependency installation and DSE requests. A Gemini key is optional.
-
-The commands below target macOS/Linux.
+Requires Node **22.12+**, Python **3.10+**, npm, and a running MongoDB server. The commands below target macOS/Linux.
 
 ```sh
 git clone https://github.com/RezuanMustafaHasan/Bloomfolio.git
 cd Bloomfolio
 npm ci
 npm run setup
-```
-
-`setup` installs the four Node projects using their lockfiles, creates the Python virtual environment, installs the market-data dependencies, and creates missing `.env` files from the examples. New API configurations receive separate random JWT secrets. Existing `.env` files are preserved.
-
-Check `services/api/.env` and `services/admin-api/.env`: both must use the same `MONGODB_URI`. By default they use `mongodb://127.0.0.1:27017/bloomfolio`.
-
-With MongoDB running:
-
-```sh
 npm run dev
 ```
 
-This starts all five processes. Press **Ctrl+C** to stop the group; if one service fails, the runner stops the remaining services so startup failures are visible.
+`setup` installs each Node project from its lockfile, creates the Python virtual environment, and creates missing `.env` files with separate random JWT secrets. Existing configurations are preserved. Both APIs must use the same `MONGODB_URI`; the default is `mongodb://127.0.0.1:27017/bloomfolio`.
 
-| Component | Local URL |
+| Component | URL |
 | --- | --- |
 | Investor portal | http://localhost:5173 |
 | Admin portal | http://localhost:5174 |
 | User API health | http://localhost:8080/api/health |
 | Admin API health | http://localhost:8081/api/health |
-| Market-data API health | http://localhost:8000/api/health |
-| FastAPI interactive docs | http://localhost:8000/docs |
+| Market-data health | http://localhost:8000/api/health |
+| Interactive API docs | http://localhost:8000/docs |
 
-Use `localhost` consistently for the browser and APIs so cookies work across these ports.
-
-### Try the isolated sample
-
-The demo seed uses a separate local database, `bloomfolio_demo`. It adds the existing SIBL sample, a fictional investor with holdings and virtual balance, an admin, and one funding request. It does not erase collections or modify the normal `bloomfolio` database.
-
-Stop any running Bloomfolio stack, then:
+Use `localhost` consistently in the browser. Ctrl+C stops all five processes. Each component also has a root `dev:web`, `dev:admin`, `dev:api`, or `dev:admin-api` command. To run FastAPI separately:
 
 ```sh
-npm run seed:demo
-MONGODB_URI=mongodb://127.0.0.1:27017/bloomfolio_demo npm run dev
-```
-
-Generated login details are saved locally in **`.runtime/demo-credentials.json`**, which is excluded from Git. Open `/login` in the investor portal or `/admin/login` in the admin portal. The seed leaves existing demo accounts untouched; keep the generated credentials file.
-
-For normal use, create an investor through `/signup`. The admin portal has a login page; the existing admin bootstrap endpoint is `POST http://localhost:8081/admin/auth/signup` with `name`, `email`, and `password`. Create an admin only in your own local deployment.
-
-To populate a fresh normal database, sign in as admin, open **Bulk Fetch**, and start the scrape. It processes configured trading codes in batches and shows progress/errors. DSE must be reachable for this to succeed.
-
-### Configuration
-
-| File | Variables |
-| --- | --- |
-| `apps/web/.env` | `VITE_BACKEND_BASE` (default `http://localhost:8080`), `VITE_MARKET_DATA_BASE` (default `http://localhost:8000`) |
-| `apps/admin/.env` | `VITE_ADMIN_BACKEND_BASE` (default `http://localhost:8081`) |
-| `services/api/.env` | `PORT`, `MONGODB_URI`, `JWT_SECRET`, `FRONTEND_ORIGIN`; optional `GEMINI_API_KEY`, `GEMINI_MODEL` |
-| `services/admin-api/.env` | `ADMIN_PORT`, `MONGODB_URI`, `ADMIN_JWT_SECRET`, `ADMIN_FRONTEND_ORIGIN` |
-| Market-data process environment | Optional `FRONTEND_ORIGINS`, a comma-separated list; defaults to the two local portals. |
-
-Restart Vite after changing `VITE_*` settings. If you change a backend port, update the corresponding frontend URL. The root runner uses port 8000 for FastAPI; run it separately to choose another port. Never put API keys in `VITE_*` variables because those values are shipped to the browser.
-
-Individual commands:
-
-```sh
-npm run dev:web
-npm run dev:admin
-npm run dev:api
-npm run dev:admin-api
-# In a separate terminal, from the repository root:
 cd services/market-data
 .venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
+### Local AI without an API key
+
+Install and start [Ollama](https://ollama.com/), then download the small model used in local verification:
+
+```sh
+ollama pull qwen3:0.6b
+```
+
+Set these in `services/api/.env` and restart the stack:
+
+```dotenv
+AI_PROVIDER=ollama
+OLLAMA_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen3:0.6b
+```
+
+Alternatively use `AI_PROVIDER=gemini` with a valid `GEMINI_API_KEY` and `GEMINI_MODEL`. Requests have bounded timeouts and expose actionable provider errors; they do not silently substitute fabricated answers. The advisor is experimental and generated text can be wrong.
+
+### Demo and feature verification
+
+With the stack running, create the isolated demo accounts and source-backed snapshots:
+
+```sh
+npm run seed:demo
+```
+
+Stop the stack, then restart against the same demo database:
+
+```sh
+MONGODB_URI=mongodb://127.0.0.1:27017/bloomfolio_demo npm run dev
+```
+
+The seed adds real market snapshots, fictional investor/counterparty/admin accounts, and virtual balances/holdings. Generated credentials are stored only in **`.runtime/demo-credentials.json`** and are excluded from Git. The normal `bloomfolio` database is untouched. Existing demo accounts and their version-2 portfolios are preserved on repeat seeds.
+
+Then, in another terminal:
+
+```sh
+npm run test:features
+```
+
+This performs actual API operations in the demo database: authentication checks, funding submission/approval/rejection/modification, duplicate-approval prevention, a matched virtual trade, order editing/cancellation, holding assignment, bulk-sync stop/completion, and a generated/saved advisor reply. It leaves useful pending orders, funding requests, and transaction history for feature captures. It requires the running demo stack and a configured AI model.
+
+For a normal account, use `/signup`. Bootstrap your local admin through `POST http://localhost:8081/admin/auth/signup` with `name`, `email`, and `password`; then log in at `/admin/login`.
+
+### Configuration
+
+| Location | Settings |
+| --- | --- |
+| `apps/web/.env` | `VITE_BACKEND_BASE`, `VITE_MARKET_DATA_BASE` |
+| `apps/admin/.env` | `VITE_ADMIN_BACKEND_BASE` |
+| `services/api/.env` | `PORT`, `MONGODB_URI`, `JWT_SECRET`, `FRONTEND_ORIGIN`, `MARKET_DATA_URL`, AI provider/model settings |
+| `services/admin-api/.env` | `ADMIN_PORT`, `MONGODB_URI`, `ADMIN_JWT_SECRET`, `ADMIN_FRONTEND_ORIGIN`, `MARKET_DATA_URL` |
+| FastAPI process environment | Optional `FRONTEND_ORIGINS` and `MARKET_CACHE_DIR` |
+
+Copy the supplied `.env.example` files when configuring manually. Restart Vite after changing `VITE_*` values. API keys belong in server configuration, never in a `VITE_*` variable.
+
 ## Feature screenshots
 
-Captured from the running application at 1440 px width with the isolated sample database. Portfolio balances, the funding reference, and account identities are fictional. Chart panels show the actual DSE access failure. The AI screenshot shows the interface; model generation requires your own configured key.
+All images are captured from functional screens, after API workflow checks. Public market records are real; users, holdings, pending orders, and funding requests are part of the local simulation. The screenshot runner checks both bar counts **and visible colored plot pixels**, changes chart ranges, tests another symbol, and uses the visible login forms.
 
-### Stock research and history panels
+### Dashboard and sectors
 
-Company prices, fundamentals, financial data, corporate actions, and chart range controls. The visible chart error documents the upstream restriction during capture.
+![Market dashboard with multiple real company quotes](docs/screenshots/dashboard.png)
+![Expanded bank sector](docs/screenshots/sectors.png)
 
-![Company research, financial information, and chart panels](docs/screenshots/stock-details.png)
+### Company research
 
-### Simulated trading and order book
+![Company fundamentals and ownership](docs/screenshots/company-fundamentals.png)
+![Shareholding charts from source records](docs/screenshots/ownership.png)
+![Dividend history and corporate actions](docs/screenshots/corporate-actions.png)
+![Annual and interim financial performance](docs/screenshots/financial-performance.png)
 
-Inspect pending BUY/SELL orders and prepare an order with price and quantity. No order was submitted during capture.
+### Trading and portfolio
 
-![Simulated trading form and order book](docs/screenshots/trade-form.png)
+![Trading form with populated buy and sell books](docs/screenshots/trade-form.png)
+![Pending orders with edit and cancellation controls](docs/screenshots/my-orders.png)
+![Order editing and resubmission](docs/screenshots/my-orders-edit.png)
+![Virtual portfolio with multiple holdings](docs/screenshots/portfolio.png)
+![History created by an executed virtual trade](docs/screenshots/transaction-history.png)
+![Funding requests with real workflow statuses](docs/screenshots/funding-request.png)
 
-### Funding requests
+### Generated advisor conversation
 
-Submit a virtual-funding request and inspect its status.
+This shows an actual locally generated response and saved conversation, not a prewritten example answer.
 
-![Investor funding request form and sample request](docs/screenshots/funding-request.png)
+![Generated AI advisor response with selected stock context](docs/screenshots/ai-advisor.png)
 
-### Portfolio
+### Administration
 
-Holdings, average cost, current stored valuation, purchase power, and profit/loss.
+![Admin dashboard](docs/screenshots/admin-dashboard.png)
+![Admin user management](docs/screenshots/admin-users.png)
+![Stock assignment](docs/screenshots/admin-assign-stock.png)
+![Pending funding review](docs/screenshots/admin-requests.png)
+![Approved funding requests](docs/screenshots/admin-approved-requests.png)
+![Completed bulk synchronization](docs/screenshots/admin-bulk-fetch.png)
 
-![Investor portfolio with fictional holdings](docs/screenshots/portfolio.png)
+<details>
+<summary>Authentication and API documentation</summary>
 
-### Sector comparison
+![Investor signup](docs/screenshots/signup.png)
+![Investor login](docs/screenshots/login.png)
+![Admin login](docs/screenshots/admin-login.png)
+![FastAPI endpoints](docs/screenshots/market-data-api.png)
 
-Expand a sector to see its company table and compare metrics.
+</details>
 
-![Expanded bank sector with the sample SIBL stock](docs/screenshots/sectors.png)
-
-### AI advisor
-
-Select stocks, compose questions, and access saved conversations.
-
-![AI financial advisor interface](docs/screenshots/ai-advisor.png)
-
-### Admin funding review
-
-Filter requests by status or transaction reference; accept, reject, or modify requests.
-
-![Admin money request review with a fictional pending request](docs/screenshots/admin-requests.png)
-
-### Admin bulk data collection
-
-Start company-data collection and inspect progress and failures.
-
-![Admin bulk stock fetching controls](docs/screenshots/admin-bulk-fetch.png)
-
-### FastAPI documentation
-
-Inspect and try the health and daily-history endpoints.
-
-![FastAPI Swagger documentation](docs/screenshots/market-data-api.png)
-
-## API overview
-
-| Service | Route | Purpose |
-| --- | --- | --- |
-| User | `GET /fetch-all-stocks`, `GET /fetch-details/:code` | Read MongoDB company snapshots. |
-| User | `POST /signup`, `POST /login` | Cookie-based user sessions. |
-| User | `GET /users/:id`, `GET /users/:id/portfolio/:code` | Authenticated profile access and own-stock holdings. |
-| User | `/api/orders`, `/api/orders/mine`, `/api/orders/:id/resubmit` | Order listing, creation, resubmission, and cancellation. Writes/own orders require a session. |
-| User | `POST /api/order/execute/:orderId` | Request internal matching at the same asking price. |
-| User | `POST /api/requests`, `GET /api/requests/mine` | Own virtual-funding requests. |
-| User | `/api/ai/chat`, `/api/ai/sessions`, `/api/ai/session/:id` | Gemini chat and saved conversations. |
-| Admin | `/admin/auth/*`, `/admin/users`, `/admin/assign-stock` | Admin sessions and user/holding administration. |
-| Admin | `/admin/requests/*`, `/admin/bulk-fetch*` | Funding review and company-data collection. |
-| Market data | `GET /api/history?symbol=CITYBANK&months=6` | Daily history; months must be 1–120. |
-
-History response fields are `symbol`, `start`, `end`, `count`, and `data`; each row contains `date`, `open`, `high`, `low`, `close`, and `volume`. Rows are sorted by date and deduplicated. The service returns 422 for invalid queries, 404 for an empty archive table, 502 for upstream HTTP/markup failures, and 504 for timeouts. Health checks confirm the service is running; they do not verify DSE availability.
-
-## Verification and screenshot refresh
+## Checks and screenshot refresh
 
 ```sh
-npm run build                 # Production builds of both React apps
-npm run test:market-data      # Parser, response contract, and error handling
-npm run check                 # Read-only smoke checks; requires npm run dev
-```
-
-CI builds both portals and runs the market-data tests without relying on DSE or a database. Unit fixtures exercise the parser and errors; they do not establish live-source availability.
-
-To refresh screenshots, run the isolated sample stack as above, then in another terminal:
-
-```sh
+npm run build                 # Both production frontend builds
+npm run test:market-data      # Normalization, parsing, caching, stale fallback, errors
+npm run check                 # Read-only checks against the running stack
+npm run test:features         # Demo-only workflow mutations and AI generation
 npx playwright install chromium
-npm run screenshots
+npm run screenshots           # Requires successful feature-evidence file
 ```
 
-The capture script logs into the generated demo accounts, verifies stock filtering, captures all documented screens, and fails on uncaught browser errors. It does not mock market responses, invoke Gemini, start a scrape, or execute trades. Only run it against the demo stack because it overwrites the documentation images.
+CI builds the frontends and runs unit tests without a network source or database. The local workflow tests establish source and integration behavior; unit-test fixtures are never used as app market data.
 
-## Troubleshooting and current limits
+## Current boundaries
 
-- **Empty stock table:** a fresh database has no snapshots. Run the admin scrape or use the isolated sample. Missing stock details show an unavailable message instead of another company's sample data.
-- **DSE 403 / unavailable history:** the source may restrict access from your network. FastAPI now bounds requests to 20 seconds and reports upstream failures. Existing MongoDB snapshots remain available. No successful live-history capture is claimed here.
-- **MongoDB connection failure:** start MongoDB and check both API environment files. Use the same URI for both services.
-- **Port already in use:** stop the previous stack. Vite uses strict ports 5173/5174 and will fail rather than silently move to a port outside the configured origins.
-- **AI missing-key/quota/model error:** configure `GEMINI_API_KEY` in the user API and restart. Stored company context may be stale; the advisor is an experimental feature.
-- **Prototype boundaries:** admin registration is exposed through the existing API; cookie authentication, authorization, and order matching need a separate production review. Trade updates are not wrapped in a database transaction. The bulk-fetch stop flag does not currently cancel already scheduled work. Use this as a local simulation.
-- **Dependency/build debt:** existing Node dependencies have audit findings, and the investor bundle triggers Vite's size warning. Dependency upgrades and bundle splitting are separate follow-up work.
-
-See [architecture and migration notes](docs/architecture.md) for service boundaries and data flow.
+- Market records can be delayed or stale. Check their visible dates and independently verify anything used outside this simulator.
+- Matching runs serially within one API process. Ledger updates are not distributed database transactions; multi-instance trading requires a transactional design.
+- Admin bootstrap is an existing local-development endpoint. A public deployment needs admin provisioning and authentication hardening.
+- Bonus/rights records not supplied by the source are labeled as unavailable. They are not inferred from cash dividends.
+- Source-dependent feature checks need internet access; local AI needs Ollama running with the configured model.
+- Existing Node audit findings and the investor bundle-size warning remain separate maintenance work.

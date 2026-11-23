@@ -147,7 +147,7 @@ const DashboardOverview = () => {
               <path key={i} d={seg.d} fill={seg.color} />
             ))}
             {/* Center label */}
-            <text x="200" y="170" textAnchor="middle" className="gauge-title">DSEX</text>
+            <text x="200" y="170" textAnchor="middle" className="gauge-title">Market</text>
             <text x="200" y="195" textAnchor="middle" className="gauge-subtitle">Strength</text>
           </svg>
           <div className="gauge-counts">
